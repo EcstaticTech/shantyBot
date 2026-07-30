@@ -9,6 +9,11 @@ A secure, zero-latency local music bot and web status server running inside a si
 - **Interactive Discord UI**: Persistent Discord buttons (Pause/Resume, Skip, Raid Party) attached to Now Playing cards.
 - **FastAPI Tavern Web Status Server**: Light-weight, read-only HTML and JSON endpoints bound to the `asyncio` event loop.
 
+## Ambient Audio & Attributions
+The tavern ambient layering engine defaults to loading `./media/ambient/tavern.mp3`.
+- Recommended / Project Standard Sound: **[Freesound.org Sound #814284](https://freesound.org/people/Robinhood76/sounds/814284/)** by **Robinhood76** (Licensed under Creative Commons BY-NC).
+- To enable default tavern ambience, save the downloaded audio file as `./media/ambient/tavern.mp3`.
+
 ## Directory Layout
 ```
 shantyBot/
@@ -30,6 +35,7 @@ shantyBot/
 ├── media/
 │   ├── shanties/
 │   ├── ambient/
+│   │   └── tavern.mp3  (Default loop)
 │   ├── raid_sounds/
 │   └── cache/
 └── web/
