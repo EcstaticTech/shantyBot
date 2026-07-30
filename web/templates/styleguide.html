@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EcstaticTech641 — Style Guide</title>
+  <meta name="description" content="Central design reference for EcstaticTech641 web projects." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ================================================
+       ECSTATICTECH641 — DESIGN SYSTEM
+       version 1.0.0
+
+       USAGE
+       -----
+       Copy the :root block into any project.
+       Import Manrope + JetBrains Mono from Google Fonts.
+       Reference tokens as CSS custom properties.
+
+       PALETTE FORMULA (whosajid/UI-Colors — OKLCH)
+       Tweak --hue (0–360) and --chroma (0–0.2) to
+       shift the entire palette in one edit.
+    ================================================ */
+
+    :root {
+      /* --- Palette knobs --- */
+      --hue:    230;
+      --chroma: 0.06;
+
+      /* --- Backgrounds --- */
+      --bg-dark:      oklch(0.14 calc(var(--chroma) * 0.5) var(--hue));
+      --bg:           oklch(0.18 calc(var(--chroma) * 0.5) var(--hue));
+      --bg-light:     oklch(0.23 calc(var(--chroma) * 0.5) var(--hue));
+      --bg-raised:    oklch(0.20 calc(var(--chroma) * 0.5) var(--hue));
+
+      /* --- Text --- */
+      --text:         oklch(0.94 0.01 var(--hue));
+      --text-muted:   oklch(0.62 0.02 var(--hue));
+      --text-faint:   oklch(0.42 0.02 var(--hue));
+
+      /* --- Borders --- */
+      --highlight:    oklch(0.32 calc(var(--chroma) * 0.6) var(--hue));
+      --border:       oklch(0.28 calc(var(--chroma) * 0.5) var(--hue));
+      --border-muted: oklch(0.22 calc(var(--chroma) * 0.3) var(--hue));
+
+      /* --- Brand / action --- */
+      --primary:      oklch(0.65 0.18 var(--hue));
+      --primary-dim:  oklch(0.55 0.16 var(--hue));
+      --secondary:    oklch(0.72 0.14 calc(var(--hue) + 40));
+
+      /* --- Semantic --- */
+      --danger:       oklch(0.62 0.20  25);
+      --warning:      oklch(0.75 0.18  80);
+      --success:      oklch(0.68 0.18 150);
+      --info:         oklch(0.68 0.15 220);
+
+      /* --- Semantic backgrounds (tinted) --- */
+      --danger-bg:    oklch(0.20 0.05  25);
+      --warning-bg:   oklch(0.20 0.05  80);
+      --success-bg:   oklch(0.20 0.05 150);
+      --info-bg:      oklch(0.20 0.05 220);
+
+      /* --- Typography --- */
+      --font-sans:  'Manrope', system-ui, sans-serif;
+      --font-mono:  'JetBrains Mono', 'Fira Code', monospace;
+
+      --text-xs:    0.72rem;   /*  ~11.5px */
+      --text-sm:    0.82rem;   /*  ~13px   */
+      --text-base:  1rem;      /*  16px    */
+      --text-md:    1.05rem;   /*  ~17px   */
+      --text-lg:    1.2rem;    /*  ~19px   */
+      --text-xl:    1.5rem;    /*  24px    */
+      --text-2xl:   2rem;      /*  32px    */
+      --text-3xl:   2.75rem;   /*  44px    */
+
+      --weight-regular: 400;
+      --weight-medium:  500;
+      --weight-bold:    700;
+
+      --leading-tight:  1.2;
+      --leading-base:   1.65;
+      --leading-loose:  1.8;
+
+      --tracking-tight: -0.02em;
+      --tracking-base:   0;
+      --tracking-wide:   0.08em;
+      --tracking-wider:  0.14em;
+
+      /* --- Spacing scale (4px base) --- */
+      --space-1:  0.25rem;   /*  4px */
+      --space-2:  0.5rem;    /*  8px */
+      --space-3:  0.75rem;   /* 12px */
+      --space-4:  1rem;      /* 16px */
+      --space-5:  1.25rem;   /* 20px */
+      --space-6:  1.5rem;    /* 24px */
+      --space-8:  2rem;      /* 32px */
+      --space-10: 2.5rem;    /* 40px */
+      --space-12: 3rem;      /* 48px */
+      --space-16: 4rem;      /* 64px */
+      --space-20: 5rem;      /* 80px */
+
+      /* --- Radius --- */
+      --radius-sm:  4px;
+      --radius-md:  8px;
+      --radius-lg:  14px;
+      --radius-xl:  20px;
+      --radius-full: 9999px;
+
+      /* --- Motion --- */
+      --duration-fast:   120ms;
+      --duration-base:   200ms;
+      --duration-slow:   350ms;
+      --duration-slower: 500ms;
+
+      --ease-out:    cubic-bezier(0.0, 0.0, 0.2, 1);
+      --ease-in-out: cubic-bezier(0.4, 0.0, 0.2, 1);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+      /* --- Layout --- */
+      --page-width:   860px;
+      --page-padding: var(--space-6);
+      --col-gap:      var(--space-4);
+    }
+
+    /* ================================================
+       STYLE GUIDE — presentation layer
+    ================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-dark);
+      color: var(--text);
+      line-height: var(--leading-base);
+      font-size: var(--text-base);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Page shell */
+    .sg-page {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      min-height: 100vh;
+    }
+
+    /* Sidebar nav */
+    .sg-nav {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: var(--space-8) var(--space-5);
+      border-right: 1px solid var(--border-muted);
+      background: var(--bg-dark);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+    }
+    .sg-nav-logo {
+      font-size: var(--text-sm);
+      font-weight: var(--weight-bold);
+      color: var(--text);
+      letter-spacing: var(--tracking-wide);
+      text-transform: uppercase;
+      margin-bottom: var(--space-6);
+    }
+    .sg-nav-logo span { color: var(--primary); }
+    .sg-nav-section {
+      font-size: var(--text-xs);
+      font-weight: var(--weight-bold);
+      text-transform: uppercase;
+      letter-spacing: var(--tracking-wider);
+      color: var(--text-faint);
+      margin-top: var(--space-5);
+      margin-bottom: var(--space-1);
+      padding-left: var(--space-3);
+    }
+    .sg-nav a {
+      display: block;
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: var(--space-1) var(--space-3);
+      border-radius: var(--radius-md);
+      transition: color var(--duration-base) var(--ease-out),
+                  background var(--duration-base) var(--ease-out);
+    }
+    .sg-nav a:hover { color: var(--text); background: var(--bg-light); }
+    .sg-nav a.active { color: var(--primary); background: var(--bg-light); }
+
+    /* Main content */
+    .sg-main {
+      padding: var(--space-12) var(--space-10);
+      max-width: 760px;
+    }
+
+    /* Sections */
+    .sg-section {
+      margin-bottom: var(--space-16);
+      scroll-margin-top: var(--space-8);
+    }
+    .sg-section-title {
+      font-size: var(--text-xs);
+      font-weight: var(--weight-bold);
+      text-transform: uppercase;
+      letter-spacing: var(--tracking-wider);
+      color: var(--primary);
+      margin-bottom: var(--space-3);
+    }
+    .sg-section h2 {
+      font-size: var(--text-2xl);
+      font-weight: var(--weight-bold);
+      letter-spacing: var(--tracking-tight);
+      line-height: var(--leading-tight);
+      margin-bottom: var(--space-3);
+    }
+    .sg-section > p {
+      color: var(--text-muted);
+      font-size: var(--text-md);
+      max-width: 560px;
+      margin-bottom: var(--space-8);
+    }
+    .sg-divider {
+      border: none;
+      border-top: 1px solid var(--border-muted);
+      margin: var(--space-8) 0;
+    }
+
+    /* Sub-headings inside sections */
+    .sg-label {
+      font-size: var(--text-xs);
+      font-weight: var(--weight-bold);
+      text-transform: uppercase;
+      letter-spacing: var(--tracking-wider);
+      color: var(--text-faint);
+      margin-bottom: var(--space-3);
+      margin-top: var(--space-8);
+    }
+    .sg-label:first-of-type { margin-top: 0; }
+
+    /* Token rows */
+    .token-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: var(--space-2) 0;
+      border-bottom: 1px solid var(--border-muted);
+      font-size: var(--text-sm);
+      gap: var(--space-4);
+    }
+    .token-name { color: var(--primary); font-family: var(--font-mono); }
+    .token-value { color: var(--text-muted); font-family: var(--font-mono); }
+    .token-preview { color: var(--text-faint); font-style: italic; }
+
+    /* ================================================
+       COLOR SECTION
+    ================================================ */
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: var(--space-3);
+    }
+    .color-swatch {
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--border-muted);
+    }
+    .color-swatch-block {
+      height: 56px;
+    }
+    .color-swatch-info {
+      padding: var(--space-2) var(--space-3);
+      background: var(--bg);
+    }
+    .color-swatch-name {
+      font-size: var(--text-xs);
+      font-weight: var(--weight-bold);
+      font-family: var(--font-mono);
+      color: var(--text);
+      display: block;
+    }
+    .color-swatch-desc {
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+    }
+
+    /* ================================================
+       TYPOGRAPHY SECTION
+    ================================================ */
+    .type-row {
+      padding: var(--space-5) 0;
+      border-bottom: 1px solid var(--border-muted);
+      display: grid;
+      grid-template-columns: 1fr 200px;
+      gap: var(--space-8);
+      align-items: center;
+    }
+    .type-meta { text-align: right; }
+    .type-meta-name {
+      font-size: var(--text-xs);
+      font-family: var(--font-mono);
+      color: var(--primary);
+      display: block;
+    }
+    .type-meta-val {
+      font-size: var(--text-xs);
+      color: var(--text-faint);
+    }
+
+    /* ================================================
+       SPACING SECTION
+    ================================================ */
+    .space-grid {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+    .space-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+    }
+    .space-bar-wrap {
+      flex: 1;
+      background: var(--bg-light);
+      border-radius: var(--radius-sm);
+      height: 20px;
+      overflow: hidden;
+    }
+    .space-bar {
+      height: 100%;
+      background: var(--primary);
+      opacity: 0.5;
+      border-radius: var(--radius-sm);
+    }
+    .space-label {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--primary);
+      min-width: 68px;
+    }
+    .space-val {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+      min-width: 48px;
+      text-align: right;
+    }
+
+    /* ================================================
+       COMPONENT SECTION — shared card wrapper
+    ================================================ */
+    .sg-demo {
+      background: var(--bg);
+      border: 1px solid var(--border-muted);
+      border-radius: var(--radius-lg);
+      padding: var(--space-8);
+      margin-bottom: var(--space-4);
+    }
+    .sg-demo-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+      align-items: center;
+    }
+
+    /* ---- Buttons ---- */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 0.55rem 1.1rem;
+      border-radius: var(--radius-md);
+      font-family: var(--font-sans);
+      font-size: var(--text-sm);
+      font-weight: var(--weight-medium);
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--bg-light);
+      color: var(--text);
+      text-decoration: none;
+      transition:
+        background var(--duration-base) var(--ease-out),
+        border-color var(--duration-base) var(--ease-out),
+        transform var(--duration-base) var(--ease-spring),
+        opacity var(--duration-base) var(--ease-out);
+      user-select: none;
+    }
+    .btn:hover {
+      background: var(--highlight);
+      border-color: var(--highlight);
+      transform: translateY(-1px);
+    }
+    .btn:active { transform: translateY(0) scale(0.98); }
+
+    .btn-primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: var(--bg-dark);
+    }
+    .btn-primary:hover {
+      background: var(--secondary);
+      border-color: var(--secondary);
+      color: var(--bg-dark);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border-color: transparent;
+      color: var(--text-muted);
+    }
+    .btn-ghost:hover {
+      background: var(--bg-light);
+      border-color: var(--border-muted);
+      color: var(--text);
+    }
+
+    .btn-danger {
+      background: var(--danger-bg);
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+    .btn-danger:hover {
+      background: var(--danger);
+      color: var(--bg-dark);
+    }
+
+    .btn-sm {
+      padding: 0.3rem 0.7rem;
+      font-size: var(--text-xs);
+      border-radius: var(--radius-sm);
+    }
+    .btn-lg {
+      padding: 0.75rem 1.5rem;
+      font-size: var(--text-base);
+      border-radius: var(--radius-lg);
+    }
+
+    .btn[disabled], .btn.disabled {
+      opacity: 0.38;
+      pointer-events: none;
+    }
+
+    /* ---- Cards ---- */
+    .card {
+      background: var(--bg);
+      border: 1px solid var(--border-muted);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      position: relative;
+      overflow: hidden;
+      transition:
+        border-color var(--duration-base) var(--ease-out),
+        background var(--duration-base) var(--ease-out),
+        transform var(--duration-base) var(--ease-out);
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      opacity: 0;
+      transition: opacity var(--duration-base) var(--ease-out);
+    }
+    .card:hover {
+      border-color: var(--highlight);
+      background: var(--bg-light);
+      transform: translateY(-2px);
+    }
+    .card:hover::before { opacity: 1; }
+
+    .card-title {
+      font-size: var(--text-base);
+      font-weight: var(--weight-bold);
+      color: var(--text);
+    }
+    .card-body {
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+      line-height: var(--leading-loose);
+    }
+    .card-footer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: var(--space-2);
+    }
+
+    .cards-demo {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-4);
+    }
+
+    /* ---- Badges ---- */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      padding: 0.18rem 0.55rem;
+      border-radius: var(--radius-full);
+      font-size: var(--text-xs);
+      font-weight: var(--weight-medium);
+      border: 1px solid transparent;
+    }
+    .badge-default {
+      background: var(--bg-light);
+      color: var(--text-muted);
+      border-color: var(--border-muted);
+    }
+    .badge-primary {
+      background: oklch(0.22 0.06 var(--hue));
+      color: var(--primary);
+      border-color: var(--primary-dim);
+    }
+    .badge-success {
+      background: var(--success-bg);
+      color: var(--success);
+      border-color: var(--success);
+    }
+    .badge-warning {
+      background: var(--warning-bg);
+      color: var(--warning);
+      border-color: var(--warning);
+    }
+    .badge-danger {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border-color: var(--danger);
+    }
+    .badge-info {
+      background: var(--info-bg);
+      color: var(--info);
+      border-color: var(--info);
+    }
+    .badge-dot::before {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* ---- Inputs ---- */
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      max-width: 340px;
+    }
+    .input-label {
+      font-size: var(--text-sm);
+      font-weight: var(--weight-medium);
+      color: var(--text-muted);
+    }
+    .input-hint {
+      font-size: var(--text-xs);
+      color: var(--text-faint);
+    }
+    input[type="text"],
+    input[type="email"],
+    input[type="search"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 0.55rem var(--space-4);
+      background: var(--bg-light);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: var(--text-sm);
+      outline: none;
+      transition:
+        border-color var(--duration-base) var(--ease-out),
+        box-shadow var(--duration-base) var(--ease-out);
+      appearance: none;
+    }
+    input::placeholder, textarea::placeholder { color: var(--text-faint); }
+    input:hover, textarea:hover, select:hover { border-color: var(--border); }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px oklch(0.65 0.18 var(--hue) / 0.18);
+    }
+    input.input-error { border-color: var(--danger); }
+    input.input-error:focus {
+      box-shadow: 0 0 0 3px oklch(0.62 0.20 25 / 0.18);
+    }
+    textarea { resize: vertical; min-height: 96px; line-height: var(--leading-base); }
+    select { cursor: pointer; }
+
+    .inputs-demo {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-6);
+    }
+
+    /* ================================================
+       ANIMATION SECTION
+    ================================================ */
+    .anim-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-4);
+    }
+    .anim-card {
+      background: var(--bg);
+      border: 1px solid var(--border-muted);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-4);
+      cursor: pointer;
+    }
+    .anim-card:hover .anim-target { animation-play-state: running; }
+
+    .anim-dot {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-md);
+      background: var(--primary);
+    }
+    .anim-name {
+      font-size: var(--text-xs);
+      font-family: var(--font-mono);
+      color: var(--primary);
+    }
+    .anim-desc {
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* named animations — used across all projects */
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    @keyframes scale-in {
+      from { opacity: 0; transform: scale(0.94); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    @keyframes slide-right {
+      from { opacity: 0; transform: translateX(-8px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes pulse-soft {
+      0%, 100% { opacity: 0.4; }
+      50%       { opacity: 1; }
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .demo-fade-up   { animation: fade-up    var(--duration-slow) var(--ease-out) infinite alternate paused; }
+    .demo-fade-in   { animation: fade-in    var(--duration-slow) var(--ease-out) infinite alternate paused; }
+    .demo-scale-in  { animation: scale-in   var(--duration-slow) var(--ease-spring) infinite alternate paused; }
+    .demo-slide-right { animation: slide-right var(--duration-slow) var(--ease-out) infinite alternate paused; }
+    .demo-pulse     { animation: pulse-soft 1.4s var(--ease-in-out) infinite paused; }
+    .demo-spin      { animation: spin       0.8s linear infinite paused; border-radius: 50%; }
+    .anim-card:hover .demo-fade-up,
+    .anim-card:hover .demo-fade-in,
+    .anim-card:hover .demo-scale-in,
+    .anim-card:hover .demo-slide-right,
+    .anim-card:hover .demo-pulse,
+    .anim-card:hover .demo-spin { animation-play-state: running; }
+
+    /* stagger utility — apply to parent, children pick up delay */
+    .stagger > *:nth-child(1) { animation-delay: 0.05s; }
+    .stagger > *:nth-child(2) { animation-delay: 0.10s; }
+    .stagger > *:nth-child(3) { animation-delay: 0.15s; }
+    .stagger > *:nth-child(4) { animation-delay: 0.20s; }
+    .stagger > *:nth-child(5) { animation-delay: 0.25s; }
+    .stagger > *:nth-child(6) { animation-delay: 0.30s; }
+
+    /* ================================================
+       CODE BLOCK SECTION
+    ================================================ */
+    pre, code {
+      font-family: var(--font-mono);
+      font-size: var(--text-sm);
+    }
+
+    code {
+      background: var(--bg-light);
+      color: var(--primary);
+      padding: 0.1em 0.4em;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-muted);
+    }
+
+    pre {
+      background: var(--bg);
+      border: 1px solid var(--border-muted);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      overflow-x: auto;
+      line-height: 1.7;
+      position: relative;
+    }
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      color: var(--text);
+      font-size: inherit;
+    }
+
+    /* syntax token colors */
+    .tok-comment  { color: var(--text-faint); font-style: italic; }
+    .tok-keyword  { color: var(--primary); }
+    .tok-string   { color: var(--success); }
+    .tok-number   { color: var(--warning); }
+    .tok-function { color: var(--secondary); }
+    .tok-var      { color: var(--text); }
+    .tok-punct    { color: var(--text-muted); }
+    .tok-type     { color: var(--info); }
+
+    /* line numbers */
+    .pre-lined {
+      display: grid;
+      grid-template-columns: 2rem 1fr;
+      gap: 0 var(--space-4);
+    }
+    .ln {
+      color: var(--text-faint);
+      text-align: right;
+      user-select: none;
+      font-size: var(--text-xs);
+      padding-top: 0.15em;
+    }
+
+    /* copy button on code blocks */
+    .pre-wrap { position: relative; }
+    .copy-btn {
+      position: absolute;
+      top: var(--space-3);
+      right: var(--space-3);
+      padding: 0.25rem 0.6rem;
+      font-size: var(--text-xs);
+      font-family: var(--font-sans);
+      background: var(--bg-light);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background var(--duration-base) var(--ease-out),
+                  color var(--duration-base) var(--ease-out);
+    }
+    .copy-btn:hover { background: var(--highlight); color: var(--text); }
+    .copy-btn.copied { color: var(--success); border-color: var(--success); }
+
+    /* ================================================
+       HERO SECTION (style guide page intro)
+    ================================================ */
+    .sg-hero {
+      margin-bottom: var(--space-16);
+      padding-bottom: var(--space-10);
+      border-bottom: 1px solid var(--border-muted);
+    }
+    .sg-hero-eyebrow {
+      font-size: var(--text-xs);
+      font-weight: var(--weight-bold);
+      text-transform: uppercase;
+      letter-spacing: var(--tracking-wider);
+      color: var(--primary);
+      margin-bottom: var(--space-3);
+    }
+    .sg-hero h1 {
+      font-size: var(--text-3xl);
+      font-weight: var(--weight-bold);
+      letter-spacing: var(--tracking-tight);
+      line-height: var(--leading-tight);
+      margin-bottom: var(--space-4);
+    }
+    .sg-hero p {
+      font-size: var(--text-md);
+      color: var(--text-muted);
+      max-width: 500px;
+      margin-bottom: var(--space-6);
+    }
+    .sg-version {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--text-faint);
+      background: var(--bg-light);
+      border: 1px solid var(--border-muted);
+      border-radius: var(--radius-full);
+      padding: 0.2rem 0.6rem;
+    }
+
+    /* ================================================
+       RESPONSIVE — collapse nav on narrow screens
+    ================================================ */
+    @media (max-width: 700px) {
+      .sg-page { grid-template-columns: 1fr; }
+      .sg-nav {
+        position: static;
+        height: auto;
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: var(--space-4);
+        border-right: none;
+        border-bottom: 1px solid var(--border-muted);
+        gap: var(--space-2);
+      }
+      .sg-nav-logo { width: 100%; margin-bottom: var(--space-2); }
+      .sg-nav-section { display: none; }
+      .sg-main { padding: var(--space-8) var(--space-5); }
+      .cards-demo, .inputs-demo, .anim-grid { grid-template-columns: 1fr; }
+      .type-row { grid-template-columns: 1fr; }
+      .type-meta { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+<div class="sg-page">
+
+  <!-- ====== SIDEBAR NAV ====== -->
+  <nav class="sg-nav" aria-label="Style guide navigation">
+    <div class="sg-nav-logo">Ecstatic<span>Tech</span>641</div>
+
+    <div class="sg-nav-section">Foundation</div>
+    <a href="#colors">Colors</a>
+    <a href="#typography">Typography</a>
+    <a href="#spacing">Spacing</a>
+
+    <div class="sg-nav-section">Components</div>
+    <a href="#buttons">Buttons</a>
+    <a href="#cards">Cards</a>
+    <a href="#badges">Badges</a>
+    <a href="#inputs">Inputs</a>
+
+    <div class="sg-nav-section">Motion & Code</div>
+    <a href="#animation">Animation</a>
+    <a href="#code">Code blocks</a>
+  </nav>
+
+  <!-- ====== MAIN CONTENT ====== -->
+  <main class="sg-main">
+
+    <!-- Hero -->
+    <div class="sg-hero">
+      <p class="sg-hero-eyebrow">Design System</p>
+      <h1>Style Guide</h1>
+      <p>
+        A central reference for color, typography, spacing, components, and
+        motion across all EcstaticTech641 web projects.
+      </p>
+      <span class="sg-version">v1.0.0</span>
+    </div>
+
+    <!-- ================================================
+         COLORS
+    ================================================ -->
+    <section class="sg-section" id="colors">
+      <p class="sg-section-title">Foundation</p>
+      <h2>Colors</h2>
+      <p>
+        All colors derive from two variables: <code>--hue</code> and
+        <code>--chroma</code>. Change those two values to shift the entire
+        palette. Built on the OKLCH color model via
+        <a href="https://github.com/whosajid/UI-Colors" target="_blank" rel="noopener">UI Colors</a>.
+      </p>
+
+      <p class="sg-label">Backgrounds</p>
+      <div class="color-grid">
+        <div class="color-swatch">
+          <div class="color-swatch-block" style="background:oklch(0.14 calc(0.06 * 0.5) 230)"></div>
+          <div class="color-swatch-info">
+            <span class="color-swatch-name">--bg-dark</span>
+            <span class="color-swatch-desc">Page background</span>
+          </div>
+        </div>
+        <div class="color-swatch">
+          <div class="color-swatch-block" style="background:oklch(0.18 calc(0.06 * 0.5) 230)"></div>
+          <div class="color-swatch-info">
+            <span class="color-swatch-name">--bg</span>
+            <span class="color-swatch-desc">Cards, surfaces</span>
+          </div>
+        </div>
+        <div class="color-swatch">
+          <div class="color-swatch-block" style="background:oklch(0.23 calc(0.06 * 0.5) 230)"></div>
+          <div class="color-swatch-info">
+            <span class="color-swatch-name">--bg-light</span>
+            <span class="color-swatch-desc">Hover states, inputs</span>
+          </div>
+        </div>
+        <div class="color-swatch">
+          <div class="color-swatch-block" style="background:oklch(0.20 calc(0.06 * 0.5) 230)"></div>
+          <div class="color-swatch-info">
+            <span class="color-swatch-name">--bg-raised</span>
+            <span class="color-swatch-desc">Elevated elements</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="sg-label">Text</p>
+      <div class="color-grid">
+        <div class="color-swatch">
+          <div class="color-swatch-block" style="background:oklch(0.94 0.01 230)"></div>
+          <div class="color-swatch-info">
+            <span class="color-swatch-name">--text</span>
+            <span class="color-swatch-desc">Headings, body</span>
+          </div>
+        </div>
+        <div class="color-swatch">
+          <div class="color-swatch-block" style="background:oklch(0.62 0.02 230)"></div>
+          <div class="color-swatch-info">
+            <span class="color-swatch-name">--text-muted</span>
+            <span class="color-swatch-desc">Secondary text</span>
+          </div>
+        </div>
+        <div class="color-swatch">
+          <div class="color-swatch-block" style="background:oklch(0.42 0.02 230)"></div>
+          <div class="color-swatch-info">
+            <span class="color-swatch-name">--text-faint</span>
+            <span class="color-swatch-desc">Hints, labels</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="sg-label">Brand</p>
+      <div class="color-grid">
+        <div class="color-swatch">
+          <div class="color-swatch-block" style="background:oklch(0.65 0.18 230)"></div>
+          <div class="color-swatch-info">
+            <span class="color-swatch-name">--primary</span>
+            <span class="color-swatch-desc">Links, CTAs</span>
+          </div>
+        </div>
+        <div class="color-swatch">
+          <div class="color-swatch-block" style="background:oklch(0.55 0.16 230)"></div>
+          <div class="color-swatch-info">
+            <span class="color-swatch-name">--primary-dim</span>
+            <span class="color-swatch-desc">Borders on tinted</span>
+          </div>
+        </div>
+        <div class="color-swatch">
+          <div class="color-swatch-block" style="background:oklch(0.72 0.14 270)"></div>
+          <div class="color-swatch-info">
+            <span class="color-swatch-name">--secondary</span>
+            <span class="color-swatch-desc">Gradients, accents</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="sg-label">Semantic</p>
+      <div class="color-grid">
+        <div class="color-swatch">
+          <div class="color-swatch-block" style="background:oklch(0.62 0.20 25)"></div>
+          <div class="color-swatch-info">
+            <span class="color-swatch-name">--danger</span>
+            <span class="color-swatch-desc">Errors, destructive</span>
+          </div>
+        </div>
+        <div class="color-swatch">
+          <div class="color-swatch-block" style="background:oklch(0.75 0.18 80)"></div>
+          <div class="color-swatch-info">
+            <span class="color-swatch-name">--warning</span>
+            <span class="color-swatch-desc">Cautions, alerts</span>
+          </div>
+        </div>
+        <div class="color-swatch">
+          <div class="color-swatch-block" style="background:oklch(0.68 0.18 150)"></div>
+          <div class="color-swatch-info">
+            <span class="color-swatch-name">--success</span>
+            <span class="color-swatch-desc">Confirmation, ok</span>
+          </div>
+        </div>
+        <div class="color-swatch">
+          <div class="color-swatch-block" style="background:oklch(0.68 0.15 220)"></div>
+          <div class="color-swatch-info">
+            <span class="color-swatch-name">--info</span>
+            <span class="color-swatch-desc">Informational</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="sg-label">Borders</p>
+      <div class="color-grid">
+        <div class="color-swatch">
+          <div class="color-swatch-block" style="background:oklch(0.32 calc(0.06 * 0.6) 230)"></div>
+          <div class="color-swatch-info">
+            <span class="color-swatch-name">--highlight</span>
+            <span class="color-swatch-desc">Hover borders</span>
+          </div>
+        </div>
+        <div class="color-swatch">
+          <div class="color-swatch-block" style="background:oklch(0.28 calc(0.06 * 0.5) 230)"></div>
+          <div class="color-swatch-info">
+            <span class="color-swatch-name">--border</span>
+            <span class="color-swatch-desc">Default borders</span>
+          </div>
+        </div>
+        <div class="color-swatch">
+          <div class="color-swatch-block" style="background:oklch(0.22 calc(0.06 * 0.3) 230)"></div>
+          <div class="color-swatch-info">
+            <span class="color-swatch-name">--border-muted</span>
+            <span class="color-swatch-desc">Subtle dividers</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================
+         TYPOGRAPHY
+    ================================================ -->
+    <section class="sg-section" id="typography">
+      <p class="sg-section-title">Foundation</p>
+      <h2>Typography</h2>
+      <p>
+        <strong>Manrope</strong> for UI and prose. <strong>JetBrains Mono</strong>
+        for code and tokens. Two weights in use: 400 regular, 500 medium, 700 bold.
+      </p>
+
+      <p class="sg-label">Type scale</p>
+
+      <div class="type-row">
+        <div style="font-size:var(--text-3xl); font-weight:var(--weight-bold); letter-spacing:var(--tracking-tight); line-height:var(--leading-tight);">Display</div>
+        <div class="type-meta">
+          <span class="type-meta-name">--text-3xl</span>
+          <span class="type-meta-val">2.75rem / 700 / tight</span>
+        </div>
+      </div>
+      <div class="type-row">
+        <div style="font-size:var(--text-2xl); font-weight:var(--weight-bold); letter-spacing:var(--tracking-tight);">Heading 1</div>
+        <div class="type-meta">
+          <span class="type-meta-name">--text-2xl</span>
+          <span class="type-meta-val">2rem / 700 / tight</span>
+        </div>
+      </div>
+      <div class="type-row">
+        <div style="font-size:var(--text-xl); font-weight:var(--weight-bold);">Heading 2</div>
+        <div class="type-meta">
+          <span class="type-meta-name">--text-xl</span>
+          <span class="type-meta-val">1.5rem / 700</span>
+        </div>
+      </div>
+      <div class="type-row">
+        <div style="font-size:var(--text-lg); font-weight:var(--weight-bold);">Heading 3</div>
+        <div class="type-meta">
+          <span class="type-meta-name">--text-lg</span>
+          <span class="type-meta-val">1.2rem / 700</span>
+        </div>
+      </div>
+      <div class="type-row">
+        <div style="font-size:var(--text-md);">Lead / subtitle text at 1.05rem, for introductory paragraphs.</div>
+        <div class="type-meta">
+          <span class="type-meta-name">--text-md</span>
+          <span class="type-meta-val">1.05rem / 400</span>
+        </div>
+      </div>
+      <div class="type-row">
+        <div style="font-size:var(--text-base);">Base body text at 1rem. Used for the majority of content. Line height 1.65.</div>
+        <div class="type-meta">
+          <span class="type-meta-name">--text-base</span>
+          <span class="type-meta-val">1rem / 400</span>
+        </div>
+      </div>
+      <div class="type-row">
+        <div style="font-size:var(--text-sm); color:var(--text-muted);">Small text for labels, captions, secondary UI elements.</div>
+        <div class="type-meta">
+          <span class="type-meta-name">--text-sm</span>
+          <span class="type-meta-val">0.82rem / 400</span>
+        </div>
+      </div>
+      <div class="type-row">
+        <div style="font-size:var(--text-xs); color:var(--text-faint); text-transform:uppercase; letter-spacing:var(--tracking-wider); font-weight:var(--weight-bold);">Eyebrow / overline label</div>
+        <div class="type-meta">
+          <span class="type-meta-name">--text-xs</span>
+          <span class="type-meta-val">0.72rem / 700 / wider</span>
+        </div>
+      </div>
+      <div class="type-row">
+        <div style="font-size:var(--text-sm); font-family:var(--font-mono);">monospace — tokens, filenames, code snippets</div>
+        <div class="type-meta">
+          <span class="type-meta-name">--font-mono</span>
+          <span class="type-meta-val">JetBrains Mono</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================
+         SPACING
+    ================================================ -->
+    <section class="sg-section" id="spacing">
+      <p class="sg-section-title">Foundation</p>
+      <h2>Spacing</h2>
+      <p>
+        4px base grid. Use the named tokens — avoid arbitrary values.
+        The page content well is <code>--page-width: 860px</code> with
+        <code>--page-padding: --space-6</code> on each side.
+      </p>
+
+      <div class="space-grid">
+        <div class="space-row"><span class="space-label">--space-1</span><div class="space-bar-wrap"><div class="space-bar" style="width:4px"></div></div><span class="space-val">4px</span></div>
+        <div class="space-row"><span class="space-label">--space-2</span><div class="space-bar-wrap"><div class="space-bar" style="width:8px"></div></div><span class="space-val">8px</span></div>
+        <div class="space-row"><span class="space-label">--space-3</span><div class="space-bar-wrap"><div class="space-bar" style="width:12px"></div></div><span class="space-val">12px</span></div>
+        <div class="space-row"><span class="space-label">--space-4</span><div class="space-bar-wrap"><div class="space-bar" style="width:16px"></div></div><span class="space-val">16px</span></div>
+        <div class="space-row"><span class="space-label">--space-5</span><div class="space-bar-wrap"><div class="space-bar" style="width:20px"></div></div><span class="space-val">20px</span></div>
+        <div class="space-row"><span class="space-label">--space-6</span><div class="space-bar-wrap"><div class="space-bar" style="width:24px"></div></div><span class="space-val">24px</span></div>
+        <div class="space-row"><span class="space-label">--space-8</span><div class="space-bar-wrap"><div class="space-bar" style="width:32px"></div></div><span class="space-val">32px</span></div>
+        <div class="space-row"><span class="space-label">--space-10</span><div class="space-bar-wrap"><div class="space-bar" style="width:40px"></div></div><span class="space-val">40px</span></div>
+        <div class="space-row"><span class="space-label">--space-12</span><div class="space-bar-wrap"><div class="space-bar" style="width:48px"></div></div><span class="space-val">48px</span></div>
+        <div class="space-row"><span class="space-label">--space-16</span><div class="space-bar-wrap"><div class="space-bar" style="width:64px"></div></div><span class="space-val">64px</span></div>
+        <div class="space-row"><span class="space-label">--space-20</span><div class="space-bar-wrap"><div class="space-bar" style="width:80px"></div></div><span class="space-val">80px</span></div>
+      </div>
+
+      <p class="sg-label">Border radius</p>
+      <div class="sg-demo-row">
+        <div style="width:48px;height:48px;background:var(--bg-light);border:1px solid var(--border);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;">
+          <span style="font-size:var(--text-xs);color:var(--text-muted);">sm</span>
+        </div>
+        <div style="width:48px;height:48px;background:var(--bg-light);border:1px solid var(--border);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;">
+          <span style="font-size:var(--text-xs);color:var(--text-muted);">md</span>
+        </div>
+        <div style="width:48px;height:48px;background:var(--bg-light);border:1px solid var(--border);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;">
+          <span style="font-size:var(--text-xs);color:var(--text-muted);">lg</span>
+        </div>
+        <div style="width:48px;height:48px;background:var(--bg-light);border:1px solid var(--border);border-radius:var(--radius-xl);display:flex;align-items:center;justify-content:center;">
+          <span style="font-size:var(--text-xs);color:var(--text-muted);">xl</span>
+        </div>
+        <div style="width:48px;height:48px;background:var(--bg-light);border:1px solid var(--border);border-radius:var(--radius-full);display:flex;align-items:center;justify-content:center;">
+          <span style="font-size:var(--text-xs);color:var(--text-muted);">full</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================
+         BUTTONS
+    ================================================ -->
+    <section class="sg-section" id="buttons">
+      <p class="sg-section-title">Components</p>
+      <h2>Buttons</h2>
+      <p>
+        Four variants, three sizes. All use <code>--ease-spring</code> on
+        transform for a subtle physical feel on hover and click.
+      </p>
+
+      <p class="sg-label">Variants</p>
+      <div class="sg-demo">
+        <div class="sg-demo-row">
+          <button class="btn btn-primary">Primary</button>
+          <button class="btn">Default</button>
+          <button class="btn btn-ghost">Ghost</button>
+          <button class="btn btn-danger">Danger</button>
+          <button class="btn" disabled>Disabled</button>
+        </div>
+      </div>
+
+      <p class="sg-label">Sizes</p>
+      <div class="sg-demo">
+        <div class="sg-demo-row" style="align-items:flex-end;">
+          <button class="btn btn-primary btn-lg">Large</button>
+          <button class="btn btn-primary">Default</button>
+          <button class="btn btn-primary btn-sm">Small</button>
+        </div>
+      </div>
+
+      <p class="sg-label">With icon</p>
+      <div class="sg-demo">
+        <div class="sg-demo-row">
+          <button class="btn btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.741 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+            GitHub
+          </button>
+          <button class="btn">
+            View project
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================
+         CARDS
+    ================================================ -->
+    <section class="sg-section" id="cards">
+      <p class="sg-section-title">Components</p>
+      <h2>Cards</h2>
+      <p>
+        Cards use a 2px gradient top border that fades in on hover. The lift
+        is <code>translateY(-2px)</code> via <code>--ease-out</code>.
+      </p>
+
+      <div class="cards-demo">
+        <div class="card">
+          <div class="card-title">Project name</div>
+          <p class="card-body">A short description of what this project does. Keep it to one or two sentences.</p>
+          <div class="card-footer-row">
+            <span class="badge badge-default">JavaScript</span>
+            <span style="font-size:var(--text-xs);color:var(--text-faint);">12 stars</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Another project</div>
+          <p class="card-body">Another description. Cards adapt to content height and sit in a responsive auto-fill grid.</p>
+          <div class="card-footer-row">
+            <span class="badge badge-primary">Python</span>
+            <span style="font-size:var(--text-xs);color:var(--text-faint);">4 stars</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================
+         BADGES
+    ================================================ -->
+    <section class="sg-section" id="badges">
+      <p class="sg-section-title">Components</p>
+      <h2>Badges</h2>
+      <p>
+        Pill-shaped labels for status, tags, and language indicators.
+        Each semantic variant pairs the color token with its tinted background.
+      </p>
+
+      <p class="sg-label">Variants</p>
+      <div class="sg-demo">
+        <div class="sg-demo-row">
+          <span class="badge badge-default">Default</span>
+          <span class="badge badge-primary">Primary</span>
+          <span class="badge badge-success">Success</span>
+          <span class="badge badge-warning">Warning</span>
+          <span class="badge badge-danger">Danger</span>
+          <span class="badge badge-info">Info</span>
+        </div>
+      </div>
+
+      <p class="sg-label">With status dot</p>
+      <div class="sg-demo">
+        <div class="sg-demo-row">
+          <span class="badge badge-success badge-dot">Online</span>
+          <span class="badge badge-warning badge-dot">Pending</span>
+          <span class="badge badge-danger badge-dot">Offline</span>
+          <span class="badge badge-default badge-dot">Draft</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================
+         INPUTS
+    ================================================ -->
+    <section class="sg-section" id="inputs">
+      <p class="sg-section-title">Components</p>
+      <h2>Inputs</h2>
+      <p>
+        Focus states use a 3px ring at 18% opacity of <code>--primary</code>.
+        Error states swap to <code>--danger</code>. All elements inherit
+        <code>--font-sans</code>.
+      </p>
+
+      <div class="sg-demo">
+        <div class="inputs-demo">
+          <div class="input-group">
+            <label class="input-label" for="demo-text">Text input</label>
+            <input type="text" id="demo-text" placeholder="placeholder text" />
+          </div>
+          <div class="input-group">
+            <label class="input-label" for="demo-email">Email</label>
+            <input type="email" id="demo-email" placeholder="you@example.com" />
+            <span class="input-hint">We will never share your email.</span>
+          </div>
+          <div class="input-group">
+            <label class="input-label" for="demo-error">Error state</label>
+            <input type="text" id="demo-error" class="input-error" value="bad input" />
+            <span style="font-size:var(--text-xs);color:var(--danger);">This field is required.</span>
+          </div>
+          <div class="input-group">
+            <label class="input-label" for="demo-select">Select</label>
+            <select id="demo-select">
+              <option>Option one</option>
+              <option>Option two</option>
+              <option>Option three</option>
+            </select>
+          </div>
+          <div class="input-group" style="grid-column: 1 / -1;">
+            <label class="input-label" for="demo-textarea">Textarea</label>
+            <textarea id="demo-textarea" placeholder="Write something..."></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================
+         ANIMATION
+    ================================================ -->
+    <section class="sg-section" id="animation">
+      <p class="sg-section-title">Motion</p>
+      <h2>Animation</h2>
+      <p>
+        Hover a tile to preview the animation. All durations and easings are
+        available as tokens. Use <code>animation-fill-mode: both</code> on
+        entrance animations to avoid flash-of-unstyled content.
+      </p>
+
+      <p class="sg-label">Named keyframes</p>
+      <div class="anim-grid">
+        <div class="anim-card">
+          <div class="anim-dot demo-fade-up anim-target"></div>
+          <span class="anim-name">fade-up</span>
+          <span class="anim-desc">Standard entrance. Use on cards and sections.</span>
+        </div>
+        <div class="anim-card">
+          <div class="anim-dot demo-fade-in anim-target"></div>
+          <span class="anim-name">fade-in</span>
+          <span class="anim-desc">Simple opacity. Modals, overlays.</span>
+        </div>
+        <div class="anim-card">
+          <div class="anim-dot demo-scale-in anim-target"></div>
+          <span class="anim-name">scale-in</span>
+          <span class="anim-desc">Springy entrance. Badges, dropdowns.</span>
+        </div>
+        <div class="anim-card">
+          <div class="anim-dot demo-slide-right anim-target"></div>
+          <span class="anim-name">slide-right</span>
+          <span class="anim-desc">Sidebar items, list reveals.</span>
+        </div>
+        <div class="anim-card">
+          <div class="anim-dot demo-pulse anim-target"></div>
+          <span class="anim-name">pulse-soft</span>
+          <span class="anim-desc">Loading skeletons, live indicators.</span>
+        </div>
+        <div class="anim-card">
+          <div class="anim-dot demo-spin anim-target" style="border-radius:50%;border:2px solid var(--border);border-top-color:var(--primary);background:transparent;"></div>
+          <span class="anim-name">spin</span>
+          <span class="anim-desc">Spinner / loading state.</span>
+        </div>
+      </div>
+
+      <p class="sg-label">Duration tokens</p>
+      <div class="token-row"><span class="token-name">--duration-fast</span><span class="token-value">120ms</span><span class="token-preview">Icon swaps, focus rings</span></div>
+      <div class="token-row"><span class="token-name">--duration-base</span><span class="token-value">200ms</span><span class="token-preview">Hover states, borders</span></div>
+      <div class="token-row"><span class="token-name">--duration-slow</span><span class="token-value">350ms</span><span class="token-preview">Entrance animations</span></div>
+      <div class="token-row"><span class="token-name">--duration-slower</span><span class="token-value">500ms</span><span class="token-preview">Page transitions, heroes</span></div>
+
+      <p class="sg-label">Easing tokens</p>
+      <div class="token-row"><span class="token-name">--ease-out</span><span class="token-value">cubic-bezier(0, 0, 0.2, 1)</span><span class="token-preview">Most entrances</span></div>
+      <div class="token-row"><span class="token-name">--ease-in-out</span><span class="token-value">cubic-bezier(0.4, 0, 0.2, 1)</span><span class="token-preview">State changes</span></div>
+      <div class="token-row"><span class="token-name">--ease-spring</span><span class="token-value">cubic-bezier(0.34, 1.56, 0.64, 1)</span><span class="token-preview">Scale, button press</span></div>
+
+      <p class="sg-label">Stagger utility</p>
+      <p style="font-size:var(--text-sm);color:var(--text-muted);margin-bottom:var(--space-3);">
+        Add <code>.stagger</code> to any grid or list parent — child elements
+        automatically receive increasing <code>animation-delay</code> values
+        up to the 6th child (extend in CSS as needed).
+      </p>
+    </section>
+
+    <!-- ================================================
+         CODE BLOCKS
+    ================================================ -->
+    <section class="sg-section" id="code">
+      <p class="sg-section-title">Motion &amp; Code</p>
+      <h2>Code blocks</h2>
+      <p>
+        JetBrains Mono at <code>--text-sm</code>. Inline code uses
+        <code>--primary</code> on a tinted background. Block code uses
+        semantic token colors for syntax highlighting.
+      </p>
+
+      <p class="sg-label">Inline code</p>
+      <div class="sg-demo">
+        <p style="font-size:var(--text-sm);color:var(--text-muted);">
+          Call <code>loadRepos()</code> on page load and pass the result
+          to <code>renderCard(repo, index)</code> for each item.
+          The cache key is <code>gh_repos_${'{'}GITHUB_USER{'}'}</code>.
+        </p>
+      </div>
+
+      <p class="sg-label">Block with syntax tokens</p>
+      <div class="pre-wrap">
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        <pre><code><span class="tok-comment">// Fetch public repos with localStorage cache</span>
+<span class="tok-keyword">async function</span> <span class="tok-function">loadRepos</span><span class="tok-punct">()</span> <span class="tok-punct">{</span>
+  <span class="tok-keyword">const</span> <span class="tok-var">cached</span> <span class="tok-punct">=</span> <span class="tok-function">getCached</span><span class="tok-punct">();</span>
+  <span class="tok-keyword">if</span> <span class="tok-punct">(</span><span class="tok-var">cached</span><span class="tok-punct">)</span> <span class="tok-keyword">return</span> <span class="tok-function">render</span><span class="tok-punct">(</span><span class="tok-var">cached</span><span class="tok-punct">);</span>
+
+  <span class="tok-keyword">const</span> <span class="tok-var">res</span> <span class="tok-punct">=</span> <span class="tok-keyword">await</span> <span class="tok-function">fetch</span><span class="tok-punct">(</span>
+    <span class="tok-string">`https://api.github.com/users/<span class="tok-var">${'{'}GITHUB_USER{'}'}</span>/repos`</span>
+  <span class="tok-punct">);</span>
+  <span class="tok-keyword">const</span> <span class="tok-var">repos</span> <span class="tok-punct">=</span> <span class="tok-keyword">await</span> <span class="tok-var">res</span><span class="tok-punct">.</span><span class="tok-function">json</span><span class="tok-punct">();</span>
+  <span class="tok-function">setCache</span><span class="tok-punct">(</span><span class="tok-var">repos</span><span class="tok-punct">);</span>
+  <span class="tok-function">render</span><span class="tok-punct">(</span><span class="tok-var">repos</span><span class="tok-punct">);</span>
+<span class="tok-punct">}</span></code></pre>
+      </div>
+
+      <p class="sg-label">Token reference</p>
+      <div class="token-row"><span class="tok-comment token-name">.tok-comment</span><span class="token-value">--text-faint, italic</span><span class="token-preview">Comments</span></div>
+      <div class="token-row"><span class="tok-keyword token-name">.tok-keyword</span><span class="token-value">--primary</span><span class="token-preview">const, async, if</span></div>
+      <div class="token-row"><span class="tok-string token-name">.tok-string</span><span class="token-value">--success</span><span class="token-preview">String literals</span></div>
+      <div class="token-row"><span class="tok-number token-name">.tok-number</span><span class="token-value">--warning</span><span class="token-preview">Numbers</span></div>
+      <div class="token-row"><span class="tok-function token-name">.tok-function</span><span class="token-value">--secondary</span><span class="token-preview">Function names</span></div>
+      <div class="token-row"><span class="tok-type token-name">.tok-type</span><span class="token-value">--info</span><span class="token-preview">Types, interfaces</span></div>
+      <div class="token-row"><span class="tok-punct token-name">.tok-punct</span><span class="token-value">--text-muted</span><span class="token-preview">Brackets, operators</span></div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  /* Active nav link on scroll */
+  const sections = document.querySelectorAll('.sg-section');
+  const navLinks = document.querySelectorAll('.sg-nav a');
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(a => a.classList.remove('active'));
+        const link = document.querySelector(`.sg-nav a[href="#${e.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+
+  /* Copy button */
+  function copyCode(btn) {
+    const pre = btn.nextElementSibling;
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      btn.textContent = 'Copied';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'Copy';
+        btn.classList.remove('copied');
+      }, 1800);
+    });
+  }
+</script>
+
+</body>
+</html>

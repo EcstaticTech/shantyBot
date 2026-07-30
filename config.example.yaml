@@ -1,0 +1,15 @@
+bot:
+  token: "YOUR_DISCORD_BOT_TOKEN_HERE"
+  command_prefix: "/shanty"
+  idle_disconnect_seconds: 180
+  allowed_playlist_ids: []
+
+paths:
+  media_directory: "./media/shanties"
+  raid_directory: "./media/raid_sounds"
+  ambient_directory: "./media/ambient"
+  youtube_cache_directory: "./media/cache"
+
+web:
+  host: "127.0.0.1"
+  port: 8000

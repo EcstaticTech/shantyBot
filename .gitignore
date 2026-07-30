@@ -1,0 +1,33 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Environments
+.venv/
+env/
+venv/
+ENV/
+
+# Configuration & Secrets
+config.yaml
+
+# Local Media & Testing Dumps
+media/
+audio/
+*.mp3
+*.flac
+*.opus
+*.m4a
+
+# Operating System & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+
+# Windows Service / Runtime Temp
+*.pid
