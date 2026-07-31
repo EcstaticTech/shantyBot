@@ -8,7 +8,7 @@ from core.config_validator import validate_preflight_config
 from core.youtube import YouTubeIngestor
 from core.audio_source import MixedAudioSource, _get_ffmpeg_executable
 from core.library import LocalLibrary, Track
-from web.server import _get_item_display_name
+from web.server import _get_item_display_name, create_web_app
 from main import ensure_directories
 
 def test_preflight_validator():
@@ -65,10 +65,57 @@ def test_item_display_helper():
     assert _get_item_display_name(item) == "The Longest Johns - Drunken Sailor"
     print("✅ Web Server Item Display Name Helper Passed!")
 
+def test_web_server_app():
+    dummy_player = type("DummyPlayer", (), {"current_track": None, "active_ambient": None, "queue": [], "voice_client": None})()
+    dummy_library = type("DummyLibrary", (), {"cache": []})()
+    app = create_web_app(dummy_player, dummy_library)
+    assert app is not None, "FastAPI app creation failed"
+    print("✅ FastAPI Web Server App Creation Passed!")
+
+def test_music_control_view():
+    from core.views import MusicControlView
+    dummy_player = type("DummyPlayer", (), {})()
+    view = MusicControlView(dummy_player)
+    custom_ids = [child.custom_id for child in view.children if hasattr(child, "custom_id")]
+    assert "shanty_pause_resume" in custom_ids, "shanty_pause_resume custom_id missing"
+    assert "shanty_skip" in custom_ids, "shanty_skip custom_id missing"
+    assert "shantybot:raid" not in custom_ids and "shanty_raid" not in custom_ids, "Raid button should be removed"
+    assert view.timeout is None, "View timeout must be None for persistence"
+    print("✅ MusicControlView Buttons & Persistence Test Passed!")
+
+def test_player_lock_and_interrupt():
+    from core.player import ShantyPlayer
+    dummy_bot = type("DummyBot", (), {"raid_path": "./media/raid_sounds"})()
+    player = ShantyPlayer(dummy_bot)
+    assert hasattr(player, "_playback_lock"), "player missing _playback_lock"
+    assert hasattr(player, "trigger_raid_interrupt"), "player missing trigger_raid_interrupt"
+    assert hasattr(player, "skip"), "player missing skip"
+    print("✅ ShantyPlayer Lock & Raid Interrupt Methods Passed!")
+
+def test_active_ambient_state_machine():
+    from core.player import ShantyPlayer
+    dummy_bot = type("DummyBot", (), {"raid_path": "./media/raid_sounds"})()
+    player = ShantyPlayer(dummy_bot)
+    assert hasattr(player, "active_ambient"), "player missing active_ambient"
+    assert hasattr(player, "set_ambient_mode"), "player missing set_ambient_mode"
+    assert player.active_ambient is None, "active_ambient default should be None"
+    print("✅ ShantyPlayer Active Ambient State Machine Passed!")
+
+def test_library_ambient_cache():
+    lib = LocalLibrary("./media/shanties", "./media/ambient")
+    assert hasattr(lib, "ambient_cache"), "library missing ambient_cache"
+    assert hasattr(lib, "search_ambient"), "library missing search_ambient"
+    print("✅ LocalLibrary Ambient Cache & Search Test Passed!")
+
 if __name__ == "__main__":
     test_preflight_validator()
     test_track_metadata()
     test_url_allowlist()
     test_directories()
     test_item_display_helper()
+    test_web_server_app()
+    test_music_control_view()
+    test_player_lock_and_interrupt()
+    test_active_ambient_state_machine()
+    test_library_ambient_cache()
     print("🎉 All shantyBot Sanity Checks Passed!")

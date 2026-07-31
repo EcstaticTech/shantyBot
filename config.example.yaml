@@ -13,3 +13,4 @@ paths:
 web:
   host: "127.0.0.1"
   port: 8000
+  public_url: "http://localhost:8000"

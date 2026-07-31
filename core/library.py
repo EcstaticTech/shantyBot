@@ -18,29 +18,39 @@ class Track:
         return self.title
 
 class LocalLibrary:
-    def __init__(self, base_path: str):
+    def __init__(self, base_path: str, ambient_path: str = "./media/ambient"):
         self.base_path = Path(base_path).resolve()
+        self.ambient_path = Path(ambient_path).resolve()
         self.cache: list[Track] = []
+        self.ambient_cache: list[Track] = []
         self.refresh_index()
 
     def refresh_index(self) -> int:
-        """Indexes local audio files into memory with Mutagen metadata parsing; enforces strict path scoping."""
+        """Indexes local audio and ambient files into memory with Mutagen metadata parsing."""
         new_cache = []
         if not self.base_path.exists():
             logger.warning(f"Media directory {self.base_path} does not exist.")
             self.cache = []
-            return 0
+        else:
+            for file_path in self.base_path.glob("**/*"):
+                if file_path.is_file() and file_path.suffix.lower() in [".mp3", ".flac", ".opus", ".m4a", ".wav"]:
+                    resolved = file_path.resolve()
+                    if self.base_path in resolved.parents or resolved == self.base_path:
+                        title, artist = self._extract_metadata(resolved)
+                        new_cache.append(Track(title=title, artist=artist, path=resolved))
+            self.cache = new_cache
 
-        for file_path in self.base_path.glob("**/*"):
-            if file_path.is_file() and file_path.suffix.lower() in [".mp3", ".flac", ".opus", ".m4a"]:
-                resolved = file_path.resolve()
-                # Security boundary check against path traversal
-                if self.base_path in resolved.parents or resolved == self.base_path:
-                    title, artist = self._extract_metadata(resolved)
-                    new_cache.append(Track(title=title, artist=artist, path=resolved))
+        new_ambient_cache = []
+        if self.ambient_path.exists():
+            for file_path in self.ambient_path.glob("**/*"):
+                if file_path.is_file() and file_path.suffix.lower() in [".mp3", ".flac", ".opus", ".m4a", ".wav"]:
+                    resolved = file_path.resolve()
+                    if self.ambient_path in resolved.parents or resolved == self.ambient_path:
+                        title, artist = self._extract_metadata(resolved)
+                        new_ambient_cache.append(Track(title=title, artist="Ambient", path=resolved))
+        self.ambient_cache = new_ambient_cache
 
-        self.cache = new_cache
-        logger.info(f"Indexed {len(self.cache)} tracks with metadata into memory.")
+        logger.info(f"Indexed {len(self.cache)} music tracks and {len(self.ambient_cache)} ambient tracks into memory.")
         return len(self.cache)
 
     def _extract_metadata(self, file_path: Path) -> tuple[str, str]:
@@ -49,7 +59,6 @@ class LocalLibrary:
         try:
             audio = MutagenFile(file_path)
             if audio is not None:
-                # Attempt to extract common metadata keys across ID3 / Vorbis / MP4
                 title = audio.get("TIT2", [None])[0] or audio.get("title", [None])[0] or fallback_title
                 artist = audio.get("TPE1", [None])[0] or audio.get("artist", [None])[0] or "Unknown Artist"
                 return str(title), str(artist)
@@ -59,7 +68,7 @@ class LocalLibrary:
         return fallback_title, "Unknown Artist"
 
     def search(self, query: str) -> Track | None:
-        """Sub-millisecond in-memory string matching."""
+        """Sub-millisecond in-memory string matching for music library."""
         clean_query = re.sub(r'[^\w\s\.-]', '', query).strip().lower()
         if not clean_query:
             return None
@@ -68,6 +77,19 @@ class LocalLibrary:
             if (clean_query in track.display_name.lower() or 
                 clean_query in track.title.lower() or 
                 clean_query in track.artist.lower() or 
+                clean_query in track.path.stem.lower()):
+                return track
+        return None
+
+    def search_ambient(self, query: str) -> Track | None:
+        """Sub-millisecond in-memory string matching for ambient tracks."""
+        clean_query = re.sub(r'[^\w\s\.-]', '', query).strip().lower()
+        if not clean_query:
+            return None
+
+        for track in self.ambient_cache:
+            if (clean_query in track.display_name.lower() or 
+                clean_query in track.title.lower() or 
                 clean_query in track.path.stem.lower()):
                 return track
         return None
