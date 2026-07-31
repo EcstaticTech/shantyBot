@@ -4,11 +4,27 @@ from pathlib import Path
 # Add root directory to sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from core.config_validator import validate_preflight_config
 from core.youtube import YouTubeIngestor
 from core.audio_source import MixedAudioSource, _get_ffmpeg_executable
 from core.library import LocalLibrary, Track
 from web.server import _get_item_display_name
 from main import ensure_directories
+
+def test_preflight_validator():
+    # Case A: Default Placeholder
+    case_a = {"bot": {"token": "YOUR_DISCORD_BOT_TOKEN_HERE"}}
+    assert validate_preflight_config(case_a) == False, "Case A placeholder check failed"
+
+    # Case B: Malformed String
+    case_b = {"bot": {"token": "abc123invalid"}}
+    assert validate_preflight_config(case_b) == False, "Case B malformed token check failed"
+
+    # Case C: Valid Token Format
+    case_c = {"bot": {"token": "MTEyMzQ1Njc4OTAxMjM0NTY3ODkuRzEyMzQ1LlNhbXBsZUhtYWNTaWduYXR1cmVTdHJpbmc5ODc2NQ"}}
+    assert validate_preflight_config(case_c) == True, "Case C valid token check failed"
+
+    print("✅ Pre-Flight Validator Tests Passed (Cases A, B, C)!")
 
 def test_track_metadata():
     t1 = Track(title="Wellerman", artist="Nathan Evans", path=Path("/fake/path.mp3"))
@@ -50,6 +66,7 @@ def test_item_display_helper():
     print("✅ Web Server Item Display Name Helper Passed!")
 
 if __name__ == "__main__":
+    test_preflight_validator()
     test_track_metadata()
     test_url_allowlist()
     test_directories()

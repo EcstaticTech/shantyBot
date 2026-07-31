@@ -6,6 +6,7 @@ import yaml
 import uvicorn
 import disnake
 
+from core.config_validator import validate_preflight_config
 from core.library import LocalLibrary
 from core.player import ShantyPlayer
 from core.youtube import YouTubeIngestor
@@ -19,7 +20,12 @@ logger = logging.getLogger("shantyBot")
 def load_config():
     config_path = Path("config.yaml")
     if not config_path.exists():
-        logger.error("config.yaml not found! Copy config.example.yaml to config.yaml and configure settings.")
+        logger.error(
+            "\n" + "=" * 70 + 
+            "\n CONFIGURATION ERROR: 'config.yaml' NOT FOUND" +
+            "\n Please copy 'config.example.yaml' to 'config.yaml' and add your settings." +
+            "\n" + "=" * 70
+        )
         sys.exit(1)
     with open(config_path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
@@ -38,6 +44,11 @@ def ensure_directories(config: dict):
 
 async def main():
     config = load_config()
+
+    # Pre-Flight Check: Intercept placeholder or malformed tokens before initializing subsystems
+    if not validate_preflight_config(config):
+        sys.exit(1)
+
     ensure_directories(config)
 
     # Initialize Security Library, YouTube Ingestor, and Player Engine
