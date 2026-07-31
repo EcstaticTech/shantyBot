@@ -1,5 +1,7 @@
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from core.player import ShantyPlayer
 from core.library import LocalLibrary
 
@@ -12,12 +14,76 @@ def _get_item_display_name(item) -> str:
 
 def create_web_app(player: ShantyPlayer, library: LocalLibrary | None = None) -> FastAPI:
     app = FastAPI(docs_url=None, redoc_url=None)
+    static_dir = Path("web/static").resolve()
+    if static_dir.exists():
+        app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+    @app.get("/api/v1/health")
+    async def get_health():
+        """Exposes overall system health and channel pipeline progress status."""
+        channels = []
+        for channel_id, pipeline in player.pipelines.items():
+            channels.append({
+                "channel_id": channel_id,
+                "is_playing": bool(pipeline.voice_client and pipeline.voice_client.is_playing()),
+                "is_paused": pipeline.is_paused,
+                "elapsed_seconds": round(pipeline.elapsed_seconds, 2),
+                "duration_seconds": round(pipeline.duration_seconds, 2),
+                "progress_str": pipeline.progress_str
+            })
+        return JSONResponse(content={
+            "status": "healthy",
+            "active_pipelines": len(player.pipelines),
+            "channels": channels
+        })
+
+    @app.get("/api/v1/channels/active")
+    async def get_active_channels():
+        """Exposes status, playback progress, and active queues across all connected voice channel pipelines."""
+        active = []
+        for channel_id, pipeline in list(player.pipelines.items()):
+            if channel_id <= 0:
+                continue
+            vc = pipeline.voice_client
+            if not vc or not vc.is_connected():
+                continue
+            is_playing = bool(vc.is_playing() or vc.is_paused())
+            channel_name = vc.channel.name if (hasattr(vc, "channel") and vc.channel) else f"Channel #{channel_id}"
+
+            current_name = _get_item_display_name(pipeline.current_track) if pipeline.current_track else "No shanty playing"
+            ambient_name = _get_item_display_name(pipeline.active_ambient) if pipeline.active_ambient else "Off"
+            queue_names = [_get_item_display_name(item) for item in pipeline.queue]
+
+            active.append({
+                "channel_id": channel_id,
+                "channel_name": channel_name,
+                "is_playing": is_playing,
+                "is_paused": pipeline.is_paused,
+                "current_track": current_name,
+                "ambient_mode": ambient_name,
+                "elapsed_seconds": round(pipeline.elapsed_seconds, 2),
+                "duration_seconds": round(pipeline.duration_seconds, 2),
+                "progress_str": pipeline.progress_str,
+                "queue_length": len(pipeline.queue),
+                "queue": queue_names
+            })
+
+        indexed_tracks = []
+        if library:
+            indexed_tracks = getattr(library, "cache", getattr(library, "music_cache", []))
+
+        return JSONResponse(content={
+            "active_channels": active,
+            "total_shanties_indexed": len(indexed_tracks)
+        })
 
     @app.get("/api/status")
     async def get_status():
-        is_playing = bool(player.voice_client and player.voice_client.is_playing())
-        current_track_name = _get_item_display_name(player.current_track) if player.current_track else "None"
-        ambient_name = _get_item_display_name(player.active_ambient) if player.active_ambient else "Off"
+        """Backward compatibility endpoint returning primary pipeline status."""
+        pipeline = player.primary_pipeline
+        is_playing = bool(pipeline.voice_client and pipeline.voice_client.is_playing())
+        current_track_name = _get_item_display_name(pipeline.current_track) if pipeline.current_track else "None"
+        ambient_name = _get_item_display_name(pipeline.active_ambient) if pipeline.active_ambient else "Off"
         
         indexed_tracks = []
         if library:
@@ -27,36 +93,27 @@ def create_web_app(player: ShantyPlayer, library: LocalLibrary | None = None) ->
             "current_track": current_track_name,
             "ambient_mode": ambient_name,
             "is_playing": is_playing,
-            "queue_length": len(player.queue),
+            "is_paused": pipeline.is_paused,
+            "elapsed_seconds": round(pipeline.elapsed_seconds, 2),
+            "duration_seconds": round(pipeline.duration_seconds, 2),
+            "progress_str": pipeline.progress_str,
+            "queue_length": len(pipeline.queue),
             "total_shanties_indexed": len(indexed_tracks)
         })
 
     @app.get("/", response_class=HTMLResponse)
     async def index_page():
-        current_track_name = _get_item_display_name(player.current_track) if player.current_track else "No shanty playing"
-        ambient_name = _get_item_display_name(player.active_ambient) if player.active_ambient else "Off"
-        queue_items = [_get_item_display_name(item) for item in player.queue]
-        
         indexed_tracks = []
         if library:
             indexed_tracks = getattr(library, "cache", getattr(library, "music_cache", []))
         manifest_items = [_get_item_display_name(t) for t in indexed_tracks]
 
-        # 1. Pre-compute Queue HTML block outside f-string
-        if queue_items:
-            items_list = "".join([f'<li class="item"><span class="idx">#{i+1}</span> <span>{item}</span></li>' for i, item in enumerate(queue_items)])
-            queue_html = f'<ul class="item-list">{items_list}</ul>'
-        else:
-            queue_html = '<p class="empty-state">The ship log is empty. Queue up a shanty!</p>'
-
-        # 2. Pre-compute Manifest HTML block outside f-string
         if manifest_items:
-            items_list = "".join([f'<li class="manifest-item"><span class="dot">⚓</span> <span>{item}</span></li>' for i, item in enumerate(manifest_items)])
+            items_list = "".join([f'<li class="manifest-item"><span class="dot">⚓</span> <span>{item}</span></li>' for item in manifest_items])
             manifest_html = f'<ul class="item-list">{items_list}</ul>'
         else:
             manifest_html = '<p class="empty-state">No local tracks indexed in ship log.</p>'
 
-        queue_count = len(queue_items)
         indexed_count = len(indexed_tracks)
 
         html_content = f"""<!DOCTYPE html>
@@ -65,7 +122,11 @@ def create_web_app(player: ShantyPlayer, library: LocalLibrary | None = None) ->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>shantyBot | Tavern Status</title>
-    <meta http-equiv="refresh" content="5">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/favicons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicons/favicon-16x16.png">
+    <link rel="shortcut icon" href="/static/favicons/favicon.ico">
+    <link rel="manifest" href="/static/favicons/site.webmanifest">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -117,7 +178,7 @@ def create_web_app(player: ShantyPlayer, library: LocalLibrary | None = None) ->
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
             padding-bottom: 1rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }}
@@ -168,6 +229,36 @@ def create_web_app(player: ShantyPlayer, library: LocalLibrary | None = None) ->
             100% {{ transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }}
         }}
 
+        .channel-selector-row {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            background: rgba(15, 20, 28, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 0.85rem 1.25rem;
+            border-radius: 12px;
+        }}
+
+        .select-label {{
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }}
+
+        .channel-select {{
+            background: rgba(22, 28, 38, 0.95);
+            color: var(--accent-gold);
+            border: 1px solid var(--border-color);
+            padding: 0.4rem 1rem;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+        }}
+
         .grid-status {{
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -192,12 +283,26 @@ def create_web_app(player: ShantyPlayer, library: LocalLibrary | None = None) ->
             grid-column: 1 / -1;
         }}
 
+        .now-playing-header {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }}
+
+        .progress-timestamp {{
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--accent-copper);
+            letter-spacing: 0.05em;
+            font-variant-numeric: tabular-nums;
+        }}
+
         .card-label {{
             font-size: 0.8rem;
             text-transform: uppercase;
             letter-spacing: 0.08em;
             color: var(--text-secondary);
-            margin-bottom: 0.5rem;
             font-weight: 600;
         }}
 
@@ -295,14 +400,24 @@ def create_web_app(player: ShantyPlayer, library: LocalLibrary | None = None) ->
             </div>
         </div>
 
+        <div class="channel-selector-row">
+            <span class="select-label">🔊 Active Voice Channel</span>
+            <select id="channelSelect" class="channel-select" onchange="renderSelectedChannel()">
+                <option value="">Loading channels...</option>
+            </select>
+        </div>
+
         <div class="grid-status">
             <div class="card card-full">
-                <div class="card-label">🎵 Now Playing</div>
-                <div class="now-playing-title">{current_track_name}</div>
+                <div class="now-playing-header">
+                    <span class="card-label">🎵 Now Playing</span>
+                    <span id="progressCounter" class="progress-timestamp">00:00 / 00:00</span>
+                </div>
+                <div id="nowPlaying" class="now-playing-title">No active voice channels</div>
             </div>
             <div class="card">
                 <div class="card-label">🍻 Ambient Mode</div>
-                <div class="ambient-value">{ambient_name}</div>
+                <div id="ambientMode" class="ambient-value">Off</div>
             </div>
             <div class="card">
                 <div class="card-label">📚 Shanties Indexed</div>
@@ -311,8 +426,10 @@ def create_web_app(player: ShantyPlayer, library: LocalLibrary | None = None) ->
         </div>
 
         <div class="card card-full" style="margin-bottom: 1.5rem;">
-            <div class="card-label">📜 Up Next in Queue ({queue_count})</div>
-            {queue_html}
+            <div id="queueHeader" class="card-label">📜 Up Next in Queue (0)</div>
+            <div id="queueContainer">
+                <p class="empty-state">No active voice channels.</p>
+            </div>
         </div>
 
         <div class="card card-full">
@@ -323,9 +440,89 @@ def create_web_app(player: ShantyPlayer, library: LocalLibrary | None = None) ->
         </div>
 
         <div class="footer">
-            shantyBot Async Audio Engine • Auto-refreshes every 5s
+            shantyBot Multi-Channel Audio Engine • Real-time status sync
         </div>
     </div>
+
+    <script>
+        let cachedChannels = [];
+
+        async function fetchStatus() {{
+            try {{
+                const res = await fetch('/api/v1/channels/active');
+                if (!res.ok) return;
+                const data = await res.json();
+                cachedChannels = data.active_channels || [];
+                updateChannelDropdown();
+                renderSelectedChannel();
+            }} catch (e) {{
+                console.error("Status fetch error:", e);
+            }}
+        }}
+
+        function updateChannelDropdown() {{
+            const select = document.getElementById('channelSelect');
+            const selectedVal = select.value;
+            
+            if (cachedChannels.length === 0) {{
+                select.innerHTML = '<option value="">No Active Channels</option>';
+                return;
+            }}
+
+            let optionsHtml = '';
+            cachedChannels.forEach((ch, idx) => {{
+                optionsHtml += `<option value="${{ch.channel_id}}">${{ch.channel_name}}</option>`;
+            }});
+
+            select.innerHTML = optionsHtml;
+            
+            const exists = cachedChannels.some(ch => ch.channel_id.toString() === selectedVal);
+            if (exists) {{
+                select.value = selectedVal;
+            }} else {{
+                select.value = cachedChannels[0].channel_id.toString();
+            }}
+        }}
+
+        function renderSelectedChannel() {{
+            const select = document.getElementById('channelSelect');
+            const selectedId = select.value;
+            const nowPlayingEl = document.getElementById('nowPlaying');
+            const progressCounterEl = document.getElementById('progressCounter');
+            const ambientEl = document.getElementById('ambientMode');
+            const queueHeaderEl = document.getElementById('queueHeader');
+            const queueContainerEl = document.getElementById('queueContainer');
+
+            if (!selectedId || cachedChannels.length === 0) {{
+                nowPlayingEl.innerText = "No active voice channels";
+                progressCounterEl.innerText = "00:00 / 00:00";
+                ambientEl.innerText = "Off";
+                queueHeaderEl.innerText = "📜 Up Next in Queue (0)";
+                queueContainerEl.innerHTML = '<p class="empty-state">No active voice channels.</p>';
+                return;
+            }}
+
+            const ch = cachedChannels.find(c => c.channel_id.toString() === selectedId);
+            if (!ch) return;
+
+            nowPlayingEl.innerText = ch.current_track;
+            progressCounterEl.innerText = ch.progress_str || "00:00 / 00:00";
+            ambientEl.innerText = ch.ambient_mode;
+            queueHeaderEl.innerText = `📜 Up Next in Queue (${{ch.queue_length}})`;
+
+            if (ch.queue && ch.queue.length > 0) {{
+                const itemsList = ch.queue.map((item, idx) => 
+                    `<li class="item"><span class="idx">#${{idx + 1}}</span> <span>${{item}}</span></li>`
+                ).join('');
+                queueContainerEl.innerHTML = `<ul class="item-list">${{itemsList}}</ul>`;
+            }} else {{
+                queueContainerEl.innerHTML = '<p class="empty-state">The queue is empty for this channel.</p>';
+            }}
+        }}
+
+        fetchStatus();
+        setInterval(fetchStatus, 1000);
+    </script>
 </body>
 </html>"""
         return HTMLResponse(content=html_content)

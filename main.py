@@ -68,34 +68,30 @@ def setup_ambient_command(bot: ShantyBot, player: ShantyPlayer, library: LocalLi
     ):
         await inter.response.defer()
 
+        if not inter.author.voice or not inter.author.voice.channel:
+            return await inter.followup.send("Ye must be in a voice channel to set ambient mode!", ephemeral=True)
+
+        try:
+            pipeline = await player.get_or_connect_pipeline(inter.author.voice.channel)
+        except RuntimeError as e:
+            return await inter.followup.send(f"⚠️ {e}", ephemeral=True)
+
         if choice.lower() == "off":
-            await player.set_ambient_mode(None)
+            await pipeline.set_ambient_mode(None)
             return await inter.followup.send("🔇 Ambient background audio disabled.")
 
         track = library.search_ambient(choice)
         if not track:
-            # Fallback scan directly in ambient directory
-            ambient_dir = player.ambient_dir
-            clean_choice = choice.strip().lower()
-            if ambient_dir.exists():
-                for f in ambient_dir.glob("*"):
-                    if f.is_file() and f.suffix.lower() in [".mp3", ".flac", ".opus", ".m4a", ".wav"]:
-                        f_clean = f.stem.replace("_", " ").replace("-", " ").title().lower()
-                        if f_clean == clean_choice or f.stem.lower() == clean_choice:
-                            title = f.stem.replace("_", " ").replace("-", " ").title()
-                            track = Track(title=title, artist="Ambient", path=f)
-                            break
+            # Ephemeral fallback listing actual files found in ambient directory
+            ambient_tracks = library.scan_ambient_directory()
+            if ambient_tracks:
+                track_names = ", ".join(f"`{t.title}`" for t in ambient_tracks)
+                err_msg = f"⚠️ Ambient track `{choice}` not found. Available tracks: {track_names}"
+            else:
+                err_msg = f"⚠️ Ambient track `{choice}` not found. No ambient tracks available in `./media/ambient/`."
+            return await inter.followup.send(err_msg, ephemeral=True)
 
-        if not track:
-            return await inter.followup.send(f"⚠️ Could not find ambient track: `{choice}`", ephemeral=True)
-
-        if not inter.author.voice:
-            return await inter.followup.send("Ye must be in a voice channel to set ambient mode!", ephemeral=True)
-
-        if not player.voice_client or not player.voice_client.is_connected():
-            player.voice_client = await inter.author.voice.channel.connect()
-
-        await player.set_ambient_mode(track)
+        await pipeline.set_ambient_mode(track)
         await inter.followup.send(f"🍻 Ambient background set to: **{track.title}**")
 
 def setup_list_command(bot: ShantyBot, config: dict):
@@ -107,7 +103,7 @@ def setup_list_command(bot: ShantyBot, config: dict):
         status_url = config.get("web", {}).get("public_url", "http://localhost:8000")
         embed = disnake.Embed(
             title="📜 The Ship's Manifest",
-            description=f"View all indexed shanties, active queue, and ambient mode settings live on the status board:\n\n👉 **[{status_url}]({status_url})**",
+            description=f"View all indexed shanties, active queue, and ambient mode settings live on the status board:\n\n👉 [{status_url}]({status_url})",
             color=disnake.Color.gold()
         )
         await inter.response.send_message(embed=embed, ephemeral=True)
@@ -115,13 +111,11 @@ def setup_list_command(bot: ShantyBot, config: dict):
 async def main():
     config = load_config()
 
-    # Pre-Flight Check: Intercept placeholder or malformed tokens before initializing subsystems
     if not validate_preflight_config(config):
         sys.exit(1)
 
     ensure_directories(config)
 
-    # Initialize Security Library, YouTube Ingestor, and Player Engine
     paths = config.get("paths", {})
     bot_cfg = config.get("bot", {})
     
@@ -147,17 +141,18 @@ async def main():
     player = ShantyPlayer(
         bot,
         idle_timeout=bot_cfg.get("idle_disconnect_seconds", 180),
-        ambient_dir=paths.get("ambient_directory", "./media/ambient")
+        ambient_dir=paths.get("ambient_directory", "./media/ambient"),
+        cache_dir=paths.get("youtube_cache_directory", "./media/cache"),
+        max_cache_gb=config.get("max_cache_gb", 2.0),
+        max_channels=2
     )
     bot.player = player
     setup_bot_commands(bot)
     setup_ambient_command(bot, player, library)
     setup_list_command(bot, config)
 
-    # Add persistent UI view listener across bot reboots
     bot.add_view(MusicControlView(player))
 
-    # Start FastAPI Server inside same event loop passing both player and library
     app = create_web_app(player, library)
     web_config = uvicorn.Config(
         app=app, 
@@ -168,7 +163,13 @@ async def main():
     server = uvicorn.Server(web_config)
     
     asyncio.create_task(server.serve())
-    await bot.start(bot_cfg["token"])
+    try:
+        await bot.start(bot_cfg["token"])
+    finally:
+        logger.info("Shutting down shantyBot... Cleaning up all voice pipelines and audio processes.")
+        await player.cleanup_all_pipelines()
+        if not bot.is_closed():
+            await bot.close()
 
 if __name__ == "__main__":
     asyncio.run(main())
