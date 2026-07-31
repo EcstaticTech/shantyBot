@@ -141,4 +141,4 @@ nssm start shantyBot
 ## 📄 Versioning & License
 
 - **Version**: `0.0.1-alpha`
-- **License**: MIT
+- **License**: Apache 2.0
