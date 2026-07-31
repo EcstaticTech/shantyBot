@@ -1,8 +1,8 @@
-# shantyBot `v0.0.1-alpha`
+# shantyBot `v0.0.2`
 
-A secure, zero-latency local music bot and live Web Status Board running inside a single Python `asyncio` event loop.
+A secure, zero-latency local-first music bot, multi-channel audio engine, and live Web Status Board running inside a single Python `asyncio` event loop.
 
-![Version](https://img.shields.io/badge/version-0.0.1--alpha-blue)
+![Version](https://img.shields.io/badge/version-0.0.2-blue)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![Framework](https://img.shields.io/badge/disnake-2.9%2B-purple)
 ![FastAPI](https://img.shields.io/badge/fastapi-0.111%2B-green)
@@ -11,14 +11,18 @@ A secure, zero-latency local music bot and live Web Status Board running inside 
 
 ## 🏴‍☠️ Features
 
+- **Multi-Channel Pipeline Engine**: Supports isolated voice pipelines (`ChannelAudioPipeline`) across multiple voice channels (up to 2 concurrent channels) with per-channel queues, playback locks, and volume controls.
 - **Pre-Flight Validation Engine**: Fast-fail configuration validator in `main.py` that verifies `config.yaml` and validates Discord Bot Token formatting before binding network sockets.
-- **Mutagen Tag Metadata Extraction**: Automatically parses ID3, Vorbis, and MP4 tags (`title`, `artist`) with clean filename fallbacks and `display_name` formatting.
+- **Mutagen Tag & Duration Extraction**: Automatically parses ID3, Vorbis, and MP4 tags (`title`, `artist`, `duration_seconds`) with clean filename fallbacks and `display_name` formatting.
 - **Persistent Ambient State Machine**: State-machine audio engine in `core/player.py` supporting persistent ambient background audio (`/shanty ambient <choice>`) overlaid with music or looped solo.
-- **FFmpeg Real-Time Audio Layering**: Wraps FFmpeg subprocess pipes with `amix` filter graphs to layer ambient tracks over shanties in real time (48kHz 16-bit stereo PCM).
-- **Subprocess Memory & Process Protection**: `cleanup()` flushes stderr, calls `process.kill()` and `process.wait(timeout=1)` to eliminate orphan `ffmpeg.exe` processes on Windows.
-- **Strict YouTube Ingestion & Cache Guard**: Non-blocking `yt-dlp` download engine with domain allowlisting, playlist validation, and automated LRU cache purging (`purge_cache()`).
-- **Interactive Discord UI**: Persistent Discord buttons (Pause/Resume, Skip) with static custom IDs attached to Now Playing cards.
-- **FastAPI Web Status Board & Ship's Manifest**: Real-time Web UI (`/`) and JSON endpoint (`/api/status`) rendering live Now Playing tracks, Ambient Mode badges, Queue, and scrollable local track library.
+- **Dynamic Ambient Indexing & Hot-Swapping**: Automatically scans `./media/ambient/` for `.mp3`, `.flac`, `.opus`, `.m4a`, and `.wav` files at runtime with dynamic autocomplete choices.
+- **FFmpeg Real-Time Audio Layering & Input Seeking**: Layer ambient tracks over shanties in real time (48kHz 16-bit stereo PCM) with `-ss <seconds>` input seeking for mid-track ambient toggles without track restarts.
+- **Ambient Pause Decoupling & Callback Suppression**: Pausing a shanty smoothly switches to a solo ambient background loop without stopping ambient audio. `_swapping_streams` flag guards against queue corruption during stream swaps.
+- **Drift-Free Playback Progress Counter**: Real-time `mm:ss / mm:ss` progress calculations accounting for pause states, exposed via `GET /api/v1/channels/active` and `GET /api/v1/health`.
+- **JIT Opus Cache & LRU Eviction Quota**: On-demand background Opus transcoding engine with configurable disk cache quotas (`max_cache_gb: 2.0` or `0` for uncapped storage).
+- **Subprocess Memory & Pipe Flushing Protection**: Robust `cleanup()` flushing `stdout`/`stderr` handles before calling `proc.terminate()` to prevent return code -9 SIGKILL deadlocks and orphan `ffmpeg.exe` handles.
+- **Graceful Shutdown & Orphaned Session Audit**: Intercepts `SIGINT`/`SIGTERM` container stops to execute `cleanup_all_pipelines()`, and purges orphaned gateway voice clients on startup `on_ready()`.
+- **FastAPI Web Status Board & Favicon Asset Bundle**: Real-time Web UI (`/`), Active Channel selector, Favicon asset bundle (`web/static/favicons/`), and JSON API endpoints (`/api/v1/channels/active`, `/api/v1/health`).
 
 ---
 
@@ -27,20 +31,19 @@ A secure, zero-latency local music bot and live Web Status Board running inside 
 | Command | Description |
 | :--- | :--- |
 | `/shanty play <query/url>` | Play a sea shanty from local library or an approved YouTube URL. |
-| `/shanty tavern <query>` | Play a shanty overlaid with tavern ambient audio. |
-| `/shanty ambient <choice>` | Toggle persistent background ambient sound (with dynamic autocomplete: *Tavern*, *Sailing*, *Off*). |
-| `/shanty raid` | Instantly trigger a random raiding party audio event interrupt. |
+| `/shanty ambient <choice>` | Toggle persistent background ambient sound (with dynamic autocomplete: *Sea Ambience*, *Tavern*, *Off*). |
+| `/shanty leave` | Disconnect from your voice channel, clear queue, and free pipeline resources immediately. |
+| `/shanty skip` | Skip the currently active track in your voice channel. |
 | `/shanty list` | Ephemeral link embed directing users to the Web Status Board & Ship's Manifest. |
-| `/shanty skip` | Skip the currently active track. |
 | `/shanty reload` | Re-index local audio and ambient libraries into memory. |
 
 ---
 
 ## 🎵 Ambient Audio & Attributions
 
-The tavern ambient layering engine defaults to loading `./media/ambient/tavern.mp3`.
-- **Recommended / Project Standard Sound**: **[Freesound.org Sound #814284](https://freesound.org/people/Robinhood76/sounds/814284/)** by **Robinhood76** (Licensed under Creative Commons BY-NC).
-- To enable default tavern ambience, place the downloaded audio file at `./media/ambient/tavern.mp3`.
+The ambient audio engine dynamically indexes all valid audio files in `./media/ambient/`.
+- **Recommended Default Sound**: Place ambient tracks at `./media/ambient/` (e.g. `sea.mp3`, `tavern.mp3`).
+- **Attribution Example**: **[Freesound.org Sound #814284](https://freesound.org/people/Robinhood76/sounds/814284/)** by **Robinhood76** (Licensed under Creative Commons BY-NC).
 
 ---
 
@@ -55,26 +58,29 @@ shantyBot/
 ├── main.py
 ├── Dockerfile
 ├── docker-compose.yml
-├── test_sanity.py
+├── test_sprint5.py
 ├── core/
 │   ├── __init__.py
-│   ├── audio_source.py      # Subprocess FFmpeg amix audio source
-│   ├── bot.py               # Disnake Bot client & slash commands
+│   ├── audio_source.py      # Subprocess FFmpeg amix & solo ambient sources
+│   ├── bot.py               # Disnake Bot client, orphan audit & slash commands
+│   ├── cache_index.py       # JIT Opus cache index & LRU quota manager
 │   ├── config_validator.py  # Pre-flight diagnostic validator
 │   ├── library.py           # Mutagen metadata indexer & RAM search
-│   ├── player.py            # State-machine queue & ambient engine
+│   ├── player.py            # Multi-channel pipeline state-machine & queue
 │   ├── views.py             # Persistent disnake UI control buttons
 │   └── youtube.py           # yt-dlp allowlist ingestion & cache guard
 ├── media/
 │   ├── shanties/            # Local shanty audio files (.mp3, .flac, .opus, .m4a)
-│   ├── ambient/             # Ambient background tracks (.mp3, .wav)
-│   ├── raid_sounds/         # Sound effect clips for /shanty raid
+│   ├── ambient/             # Hot-swappable ambient background tracks
+│   ├── raid_sounds/         # Sound effect clips for raid interrupts
 │   └── cache/               # Automated yt-dlp Opus cache
 └── web/
     ├── __init__.py
     ├── server.py            # FastAPI Web Status Board & JSON API
+    ├── static/
+    │   └── favicons/        # Favicon asset bundle & site.webmanifest
     └── templates/
-        └── index.html       # Glassmorphism HTML status dashboard
+        └── styleguide.html
 ```
 
 ---
@@ -83,7 +89,7 @@ shantyBot/
 
 ### Prerequisites
 1. **Python 3.11+** installed.
-2. **FFmpeg** installed and accessible in system `PATH` (or placed as `ffmpeg.exe` in the workspace root).
+2. **FFmpeg** installed and accessible in system `PATH` (or placed as `ffmpeg.exe` in workspace root).
 
 ### Installation & Execution (Local Python)
 
@@ -98,14 +104,15 @@ shantyBot/
      token: "YOUR_DISCORD_BOT_TOKEN_HERE"
    web:
      public_url: "http://localhost:8000"
+   max_cache_gb: 2.0
    ```
 3. **Install Dependencies**:
    ```bash
    pip install -r requirements.txt
    ```
-4. **Run Sanity Check Suite**:
+4. **Run Integration Test Suite**:
    ```bash
-   python test_sanity.py
+   python test_sprint5.py
    ```
 5. **Start shantyBot**:
    ```bash
@@ -116,7 +123,7 @@ shantyBot/
 
 ## 🐳 Container Deployment (Docker)
 
-To run shantyBot in a container with pre-packaged FFmpeg and Python 3.11-slim:
+To run shantyBot in a container with pre-packaged FFmpeg, read-only host mounts, and python 3.11-slim:
 
 ```bash
 docker-compose up -d --build
@@ -140,5 +147,5 @@ nssm start shantyBot
 
 ## 📄 Versioning & License
 
-- **Version**: `0.0.1-alpha`
+- **Version**: `0.0.2`
 - **License**: Apache 2.0
