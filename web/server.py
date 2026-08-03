@@ -59,6 +59,7 @@ def create_web_app(player: ShantyPlayer, library: LocalLibrary | None = None) ->
                 "channel_name": channel_name,
                 "is_playing": is_playing,
                 "is_paused": pipeline.is_paused,
+                "shuffle_mode": pipeline.shuffle_mode,
                 "current_track": current_name,
                 "ambient_mode": ambient_name,
                 "elapsed_seconds": round(pipeline.elapsed_seconds, 2),
@@ -92,6 +93,7 @@ def create_web_app(player: ShantyPlayer, library: LocalLibrary | None = None) ->
         return JSONResponse(content={
             "current_track": current_track_name,
             "ambient_mode": ambient_name,
+            "shuffle_mode": pipeline.shuffle_mode,
             "is_playing": is_playing,
             "is_paused": pipeline.is_paused,
             "elapsed_seconds": round(pipeline.elapsed_seconds, 2),
@@ -420,6 +422,10 @@ def create_web_app(player: ShantyPlayer, library: LocalLibrary | None = None) ->
                 <div id="ambientMode" class="ambient-value">Off</div>
             </div>
             <div class="card">
+                <div class="card-label">🔀 Shuffle Mode</div>
+                <div id="shuffleMode" class="ambient-value">Off</div>
+            </div>
+            <div class="card">
                 <div class="card-label">📚 Shanties Indexed</div>
                 <div class="ambient-value">{indexed_count} Tracks</div>
             </div>
@@ -490,6 +496,7 @@ def create_web_app(player: ShantyPlayer, library: LocalLibrary | None = None) ->
             const nowPlayingEl = document.getElementById('nowPlaying');
             const progressCounterEl = document.getElementById('progressCounter');
             const ambientEl = document.getElementById('ambientMode');
+            const shuffleEl = document.getElementById('shuffleMode');
             const queueHeaderEl = document.getElementById('queueHeader');
             const queueContainerEl = document.getElementById('queueContainer');
 
@@ -497,6 +504,7 @@ def create_web_app(player: ShantyPlayer, library: LocalLibrary | None = None) ->
                 nowPlayingEl.innerText = "No active voice channels";
                 progressCounterEl.innerText = "00:00 / 00:00";
                 ambientEl.innerText = "Off";
+                if (shuffleEl) shuffleEl.innerText = "Off";
                 queueHeaderEl.innerText = "📜 Up Next in Queue (0)";
                 queueContainerEl.innerHTML = '<p class="empty-state">No active voice channels.</p>';
                 return;
@@ -508,6 +516,7 @@ def create_web_app(player: ShantyPlayer, library: LocalLibrary | None = None) ->
             nowPlayingEl.innerText = ch.current_track;
             progressCounterEl.innerText = ch.progress_str || "00:00 / 00:00";
             ambientEl.innerText = ch.ambient_mode;
+            if (shuffleEl) shuffleEl.innerText = ch.shuffle_mode ? "On" : "Off";
             queueHeaderEl.innerText = `📜 Up Next in Queue (${{ch.queue_length}})`;
 
             if (ch.queue && ch.queue.length > 0) {{

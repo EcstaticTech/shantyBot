@@ -140,6 +140,7 @@ async def main():
 
     player = ShantyPlayer(
         bot,
+        library=library,
         idle_timeout=bot_cfg.get("idle_disconnect_seconds", 180),
         ambient_dir=paths.get("ambient_directory", "./media/ambient"),
         cache_dir=paths.get("youtube_cache_directory", "./media/cache"),

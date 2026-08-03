@@ -253,6 +253,88 @@ def test_active_channels_health_and_favicon_api():
     assert "/api/v1/health" in routes, "FastAPI /api/v1/health route missing"
     print("✅ FastAPI Active Channels, Health & Favicon Static Mount Test Passed!")
 
+def test_no_shanty_player_facade():
+    dummy_bot = type("DummyBot", (), {"loop": None, "raid_path": "./media/raid_sounds"})()
+    player = ShantyPlayer(dummy_bot)
+    assert not hasattr(player, "shuffle_mode"), "CRITICAL REGRESSION: ShantyPlayer must NOT have a shuffle_mode facade property!"
+    print("✅ Task F.1 Facade Eradication Audit Passed (No shuffle_mode facade on ShantyPlayer)!")
+
+def test_shuffle_toggle_and_slash_command():
+    dummy_bot = ShantyBot(player=None, library=None, youtube=None, raid_path="./media/raid_sounds")
+    setup_bot_commands(dummy_bot)
+    shanty_cmd = dummy_bot.get_slash_command("shanty")
+    sub_names = [sub.name for sub in shanty_cmd.children.values()]
+    assert "shuffle" in sub_names, "/shanty shuffle subcommand missing from bot command registry!"
+
+    pipeline = ChannelAudioPipeline(channel_id=101, bot=dummy_bot)
+    assert pipeline.shuffle_mode is False, "Initial shuffle_mode must default to False"
+    pipeline.shuffle_mode = True
+    assert pipeline.shuffle_mode is True, "Pipeline shuffle_mode toggle failed"
+    print("✅ Task F.2 Slash Command & Pipeline Instance State Toggle Passed!")
+
+def test_shuffle_auto_pick_and_exclusion():
+    dummy_bot = type("DummyBot", (), {"loop": asyncio.get_event_loop_policy().get_event_loop(), "raid_path": "./media/raid_sounds"})()
+    
+    t1 = Track(title="Track One", artist="Artist", path=Path("/fake/track1.mp3"))
+    t2 = Track(title="Track Two", artist="Artist", path=Path("/fake/track2.mp3"))
+    t3 = Track(title="Track Three", artist="Artist", path=Path("/fake/track3.mp3"))
+
+    fake_lib = type("FakeLib", (), {"cache": [t1, t2, t3]})()
+    pipeline = ChannelAudioPipeline(channel_id=102, bot=dummy_bot, library=fake_lib)
+
+    pipeline.shuffle_mode = True
+    pipeline.last_played_path = t1.path
+
+    # Simulate play_next with empty queue
+    pipeline.play_next()
+
+    assert pipeline.current_track is not None, "Shuffle failed to pick a track on empty queue"
+    assert pipeline.current_track.path != t1.path, "Shuffle picked the last played track (exclusion filter failed)"
+    assert pipeline.last_played_path == pipeline.current_track.path, "last_played_path was not updated on shuffle auto-pick"
+    print("✅ Task F.1 Shuffle Auto-Pick & Exclusion Filter Passed!")
+
+def test_shuffle_empty_and_single_track_libraries():
+    dummy_bot = type("DummyBot", (), {"loop": asyncio.get_event_loop_policy().get_event_loop(), "raid_path": "./media/raid_sounds"})()
+    
+    # 0-track library test
+    empty_lib = type("FakeLib", (), {"cache": []})()
+    pipeline_empty = ChannelAudioPipeline(channel_id=103, bot=dummy_bot, library=empty_lib)
+    pipeline_empty.shuffle_mode = True
+
+    pipeline_empty.play_next()
+    assert pipeline_empty.shuffle_mode is False, "Shuffle mode must auto-disable on empty library"
+    assert pipeline_empty.current_track is None, "current_track must be None when empty library shuffle auto-disables"
+
+    # 1-track library test
+    single_track = Track(title="Solo Track", artist="Artist", path=Path("/fake/solo.mp3"))
+    single_lib = type("FakeLib", (), {"cache": [single_track]})()
+    pipeline_single = ChannelAudioPipeline(channel_id=104, bot=dummy_bot, library=single_lib)
+    pipeline_single.shuffle_mode = True
+    pipeline_single.last_played_path = single_track.path
+
+    pipeline_single.play_next()
+    assert pipeline_single.current_track == single_track, "1-track library shuffle failed to fallback to replaying single track"
+    print("✅ Task F.1 0-Track & 1-Track Safety Guards Passed!")
+
+def test_web_telemetry_shuffle():
+    dummy_bot = type("DummyBot", (), {"loop": None, "raid_path": "./media/raid_sounds"})()
+    player = ShantyPlayer(dummy_bot)
+    p = player.get_or_create_pipeline(channel_id=202)
+    p.shuffle_mode = True
+
+    fake_vc = type("FakeVC", (), {"is_connected": lambda: True, "is_playing": lambda: False, "is_paused": lambda: False, "channel": type("Ch", (), {"name": "Test VC", "id": 202})()})()
+    p.voice_client = fake_vc
+
+    app = create_web_app(player, None)
+    
+    import json
+    active_route = [r for r in app.routes if r.path == "/api/v1/channels/active"][0]
+    res = asyncio.run(active_route.endpoint())
+    data = json.loads(res.body)
+    ch_info = data["active_channels"][0]
+    assert ch_info["shuffle_mode"] is True, "GET /api/v1/channels/active missing shuffle_mode telemetry"
+    print("✅ Task F.3 Web API Telemetry & Shuffle Status Badge Test Passed!")
+
 if __name__ == "__main__":
     test_command_deprecation()
     test_mixed_and_solo_audio_sources()
@@ -268,4 +350,9 @@ if __name__ == "__main__":
     test_dynamic_ambient_indexing()
     test_opus_cache_index()
     test_active_channels_health_and_favicon_api()
-    print("🎉 All Task E.3, E.4 & Sprint 5 Unit Tests Succeeded!")
+    test_no_shanty_player_facade()
+    test_shuffle_toggle_and_slash_command()
+    test_shuffle_auto_pick_and_exclusion()
+    test_shuffle_empty_and_single_track_libraries()
+    test_web_telemetry_shuffle()
+    print("🎉 All Task F.1 - F.4 Shuffle Mode & Architectural Audit Unit Tests Succeeded!")

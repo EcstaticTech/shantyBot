@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Dict, Optional
 import disnake
 from core.audio_source import MixedAudioSource, SoloAmbientAudioSource
-from core.library import Track
+from core.library import Track, LocalLibrary
 from core.cache_index import OpusCacheIndex
 
 logger = logging.getLogger("shantyBot")
@@ -23,6 +23,7 @@ class ChannelAudioPipeline:
         self,
         channel_id: int,
         bot: disnake.Client,
+        library: Optional[LocalLibrary] = None,
         voice_client: Optional[disnake.VoiceClient] = None,
         idle_timeout: int = 180,
         ambient_dir: Path = Path("./media/ambient"),
@@ -31,11 +32,14 @@ class ChannelAudioPipeline:
     ):
         self.channel_id: int = channel_id
         self.bot: disnake.Client = bot
+        self.library: Optional[LocalLibrary] = library
         self.voice_client: Optional[disnake.VoiceClient] = voice_client
         self.queue: list[PlayableItem] = []
         self.current_track: Optional[Track] = None
         self.current_source = None
         self.active_ambient: Optional[Track] = None
+        self.shuffle_mode: bool = False
+        self.last_played_path: Optional[Path] = None
         self.track_start_time: Optional[float] = None
         self.paused_at: Optional[float] = None
         self.total_paused_duration: float = 0.0
@@ -191,6 +195,7 @@ class ChannelAudioPipeline:
             if self.queue:
                 item = self.queue.pop(0)
                 self.current_track = item.track
+                self.last_played_path = item.track.path
                 self.duration_seconds = getattr(item.track, "duration_seconds", 0.0)
                 self.paused_at = None
                 self.total_paused_duration = 0.0
@@ -231,7 +236,79 @@ class ChannelAudioPipeline:
                 self.current_source = source
                 self.voice_client.play(source, after=self._make_after_callback())
 
-            # Case B: Queue Empty + Ambient Active (Ambient Solo Loop)
+            # Case B: Queue Empty + Shuffle Mode Active
+            elif self.shuffle_mode:
+                lib = self.library or getattr(self.bot, "library", None)
+                tracks = getattr(lib, "cache", []) if lib else []
+
+                candidates = [t for t in tracks if t.path != self.last_played_path]
+                if not candidates and tracks:
+                    # Fallback for 1-track library
+                    candidates = list(tracks)
+
+                if candidates:
+                    selected_track = random.choice(candidates)
+                    self.current_track = selected_track
+                    self.last_played_path = selected_track.path
+                    self.duration_seconds = getattr(selected_track, "duration_seconds", 0.0)
+                    self.paused_at = None
+                    self.total_paused_duration = 0.0
+                    self.track_start_time = time.time()
+
+                    if self._idle_task and not self._idle_task.done():
+                        self._idle_task.cancel()
+
+                    main_track_path = selected_track.path
+                    if self.cache_index:
+                        cached_opus = self.cache_index.get_cached_opus(selected_track.path)
+                        if cached_opus:
+                            main_track_path = cached_opus
+                        else:
+                            if self.bot and hasattr(self.bot, "loop") and self.bot.loop:
+                                self.bot.loop.create_task(self.cache_index.ensure_cached_async(selected_track.path))
+
+                    source = None
+                    if self.active_ambient is not None:
+                        try:
+                            source = MixedAudioSource(str(main_track_path), str(self.active_ambient.path))
+                        except Exception as e:
+                            logger.error(f"Error creating MixedAudioSource for shuffle auto-pick [Channel {self.channel_id}]: {e}")
+                            source = None
+
+                    if source is None:
+                        source = disnake.FFmpegPCMAudio(str(main_track_path), options="-vn -filter:a 'volume=0.8'")
+
+                    self.current_source = source
+                    self.voice_client.play(source, after=self._make_after_callback())
+                else:
+                    logger.warning(f"Shuffle mode active but media library is empty [Channel {self.channel_id}]. Disabling shuffle mode.")
+                    self.shuffle_mode = False
+                    if self.active_ambient is not None:
+                        self.current_track = None
+                        self.track_start_time = None
+                        self.paused_at = None
+                        self.total_paused_duration = 0.0
+                        self.duration_seconds = 0.0
+                        try:
+                            source = SoloAmbientAudioSource(str(self.active_ambient.path), ambient_volume=0.5)
+                        except Exception as e:
+                            logger.error(f"Error creating SoloAmbientAudioSource [Channel {self.channel_id}]: {e}")
+                            source = None
+
+                        if source:
+                            self.current_source = source
+                            self.voice_client.play(source, after=self._make_after_callback())
+                        else:
+                            self._schedule_idle_disconnect()
+                    else:
+                        self.current_track = None
+                        self.track_start_time = None
+                        self.paused_at = None
+                        self.total_paused_duration = 0.0
+                        self.duration_seconds = 0.0
+                        self._schedule_idle_disconnect()
+
+            # Case C: Queue Empty + Ambient Active (Ambient Solo Loop)
             elif self.active_ambient is not None:
                 self.current_track = None
                 self.track_start_time = None
@@ -250,7 +327,7 @@ class ChannelAudioPipeline:
                 else:
                     self._schedule_idle_disconnect()
 
-            # Case C: Queue Empty + Ambient Off
+            # Case D: Queue Empty + Ambient Off
             else:
                 self.current_track = None
                 self.track_start_time = None
@@ -424,6 +501,7 @@ class ShantyPlayer:
     def __init__(
         self,
         bot: disnake.Client,
+        library: Optional[LocalLibrary] = None,
         idle_timeout: int = 180,
         ambient_dir: str = "./media/ambient",
         cache_dir: str = "./media/cache",
@@ -431,6 +509,7 @@ class ShantyPlayer:
         max_channels: int = 2
     ):
         self.bot = bot
+        self.library = library
         self.idle_timeout = idle_timeout
         self.ambient_dir = Path(ambient_dir).resolve()
         self.max_channels = max_channels
@@ -455,6 +534,7 @@ class ShantyPlayer:
         pipeline = ChannelAudioPipeline(
             channel_id=channel_id,
             bot=self.bot,
+            library=self.library,
             voice_client=None,
             idle_timeout=self.idle_timeout,
             ambient_dir=self.ambient_dir,
@@ -482,6 +562,7 @@ class ShantyPlayer:
         pipeline = ChannelAudioPipeline(
             channel_id=channel_id,
             bot=self.bot,
+            library=self.library,
             voice_client=voice_client,
             idle_timeout=self.idle_timeout,
             ambient_dir=self.ambient_dir,
@@ -520,6 +601,7 @@ class ShantyPlayer:
             self.pipelines[self._default_channel_id] = ChannelAudioPipeline(
                 channel_id=self._default_channel_id,
                 bot=self.bot,
+                library=self.library,
                 idle_timeout=self.idle_timeout,
                 ambient_dir=self.ambient_dir,
                 cache_index=self.cache_index,

@@ -1,6 +1,7 @@
 import os
 import logging
 from pathlib import Path
+from typing import Optional
 import disnake
 from disnake.ext import commands
 from core.player import PlayableItem
@@ -108,3 +109,28 @@ def setup_bot_commands(bot: ShantyBot):
     async def reload(inter: disnake.ApplicationCommandInteraction):
         count = bot.library.refresh_index()
         await inter.response.send_message(f"Library re-indexed! Found {count} music tracks and {len(bot.library.ambient_cache)} ambient tracks.")
+
+    @shanty.sub_command(name="shuffle", description="Toggle or set shuffle auto-populating mode")
+    async def shuffle(
+        inter: disnake.ApplicationCommandInteraction,
+        choice: Optional[str] = commands.Param(default=None, choices=["on", "off"], description="Turn shuffle mode on or off")
+    ):
+        if not inter.author.voice or not inter.author.voice.channel:
+            await inter.response.send_message("Ye must be in a voice channel to set shuffle mode!", ephemeral=True)
+            return
+
+        try:
+            pipeline = await bot.player.get_or_connect_pipeline(inter.author.voice.channel)
+        except RuntimeError as e:
+            return await inter.response.send_message(f"⚠️ {e}", ephemeral=True)
+
+        if choice is not None:
+            pipeline.shuffle_mode = (choice.lower() == "on")
+        else:
+            pipeline.shuffle_mode = not pipeline.shuffle_mode
+
+        state_str = "ENABLED" if pipeline.shuffle_mode else "DISABLED"
+        await inter.response.send_message(
+            f"🔀 Shuffle mode is now **{state_str}** for **{inter.author.voice.channel.name}**. The deck will {'never run dry!' if pipeline.shuffle_mode else 'revert to standard queue.'}",
+            ephemeral=True
+        )
