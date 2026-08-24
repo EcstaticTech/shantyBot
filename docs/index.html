@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>shantyBot — Lightweight Discord Audio Engine &amp; Web Status Board</title>
+  <meta name="description" content="Documentation landing page for shantyBot - a self-hosted Discord audio bot featuring JIT Opus streaming, dynamic shanty indexing, and web telemetry." />
+
+  <!-- Strict relative path resolution -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+
+  <!-- Site Header -->
+  <header>
+    <h1>shantyBot</h1>
+    <div class="header-badges">
+      <span class="badge badge-primary">v0.0.3</span>
+      <span class="badge badge-secondary">Open Source</span>
+      <span class="badge badge-info">Discord Audio Engine</span>
+      <span class="badge badge-success">GHCR Container</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Section 1: Header & Hero -->
+    <section class="hero-section">
+      <div class="hero-badges">
+        <span class="badge badge-primary badge-dot">v0.0.3</span>
+        <span class="badge badge-secondary">Open Source</span>
+        <span class="badge badge-info">Discord Audio Engine</span>
+        <span class="badge badge-success">GHCR Container</span>
+      </div>
+      <h1 class="hero-title">shantyBot</h1>
+      <p class="hero-subtitle">
+        Lightweight, self-hosted Discord audio bot featuring JIT Opus streaming, dynamic local shanty indexing, and web dashboard telemetry.
+      </p>
+      <div class="hero-actions">
+        <a href="https://github.com/ecstatictech/shantybot/pkgs/container/shantybot" class="btn btn-primary btn-lg" target="_blank" rel="noopener noreferrer">
+          Download Docker Compose
+        </a>
+        <a href="https://github.com/ecstatictech/shantybot" class="btn btn-secondary btn-lg" target="_blank" rel="noopener noreferrer">
+          View Source on GitHub
+        </a>
+      </div>
+    </section>
+
+    <!-- Section 2: Visual / Architectural Proof -->
+    <section>
+      <h2>Visual &amp; Architectural Overview</h2>
+      <p class="muted">
+        Live dashboard interface previews, local playback cache metrics, and command dispatch telemetry.
+      </p>
+
+      <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));">
+        
+        <!-- Media Placeholder Box 1: Web Status Board Interface -->
+        <div class="card" style="padding: var(--space-4);">
+          <h3 class="card-title" style="margin-bottom: var(--space-3);">Web Status Board Interface</h3>
+          <div class="media-placeholder-box" style="aspect-ratio: 16 / 9; min-height: 260px;">
+            <!-- PLACEHOLDER: 800x450 Web Status Board Interface on Port 8000 -->
+            <svg class="placeholder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+            <div class="placeholder-text">
+              <strong>[ 800 × 450 Media Placeholder ]</strong><br />
+              Web Status Board Interface on Port 8000
+            </div>
+          </div>
+        </div>
+
+        <!-- Media Placeholder Box 2: FFmpeg JIT Opus Terminal Session -->
+        <div class="card" style="padding: var(--space-4);">
+          <h3 class="card-title" style="margin-bottom: var(--space-3);">JIT Opus Engine Terminal Session</h3>
+          <div class="media-placeholder-box" style="aspect-ratio: 16 / 9; min-height: 260px;">
+            <!-- PLACEHOLDER: 800x450 Terminal session showing FFmpeg JIT Opus caching and slash command dispatch -->
+            <svg class="placeholder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="4 17 10 11 4 5"></polyline>
+              <line x1="12" y1="19" x2="20" y2="19"></line>
+            </svg>
+            <div class="placeholder-text">
+              <strong>[ 800 × 450 Media Placeholder ]</strong><br />
+              Terminal session showing FFmpeg JIT Opus caching and slash command dispatch
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Section 3: Quick-Start Deployment -->
+    <section>
+      <h2>Quick-Start Deployment</h2>
+      <p class="muted">
+        Deploy `shantyBot` instantly using Docker Compose or configure a standard local Python virtual environment.
+      </p>
+
+      <!-- Primary Deployment: Docker Compose -->
+      <div class="quick-start-block">
+        <div class="block-header">
+          <span class="block-title">Primary Deployment — Docker Compose</span>
+        </div>
+        <div class="pre-wrap">
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          <pre><code><span class="tok-comment"># docker-compose.yml</span>
+<span class="tok-keyword">version</span>: <span class="tok-string">'3.8'</span>
+<span class="tok-keyword">services</span>:
+  <span class="tok-function">shantybot</span>:
+    <span class="tok-keyword">image</span>: <span class="tok-string">ghcr.io/ecstatictech/shantybot:latest</span>
+    <span class="tok-keyword">container_name</span>: <span class="tok-string">shantybot</span>
+    <span class="tok-keyword">restart</span>: <span class="tok-string">unless-stopped</span>
+    <span class="tok-keyword">ports</span>:
+      - <span class="tok-string">"127.0.0.1:8000:8000"</span>
+    <span class="tok-keyword">volumes</span>:
+      - <span class="tok-string">./config.yaml:/app/config.yaml:ro</span>
+      - <span class="tok-string">./media/shanties:/app/media/shanties</span>
+      - <span class="tok-string">./media/ambient:/app/media/ambient</span>
+      - <span class="tok-string">./media/cache:/app/media/cache</span></code></pre>
+        </div>
+      </div>
+
+      <!-- Manual Fallback Installation -->
+      <div class="quick-start-block" style="margin-top: var(--space-8);">
+        <div class="block-header">
+          <span class="block-title">Manual Installation — Local Python Virtual Environment</span>
+        </div>
+        <div class="pre-wrap">
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          <pre><code><span class="tok-comment"># Clone repository and set up Python environment</span>
+<span class="tok-function">git clone</span> https://github.com/ecstatictech/shantybot.git
+<span class="tok-function">cd</span> shantybot
+<span class="tok-function">python3</span> -m venv .venv
+<span class="tok-function">source</span> .venv/bin/activate  <span class="tok-comment"># On Windows use: .venv\Scripts\activate</span>
+
+<span class="tok-comment"># Install project dependencies</span>
+<span class="tok-function">pip install</span> -r requirements.txt
+
+<span class="tok-comment"># Copy configuration template and edit credentials</span>
+<span class="tok-function">cp</span> config.example.yaml config.yaml
+
+<span class="tok-comment"># Launch shantyBot audio engine &amp; web board</span>
+<span class="tok-function">python3</span> main.py</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: Configuration Reference & Parameters -->
+    <section class="config-section">
+      <h2>Configuration Reference &amp; Parameters</h2>
+      <p class="muted">
+        Full reference of configuration keys supported in `config.yaml` for bot authentication, media path bindings, and web server configuration.
+      </p>
+
+      <div class="table-container">
+        <table class="config-table">
+          <thead>
+            <tr>
+              <th>Parameter Name</th>
+              <th>Default Value</th>
+              <th>Config Key / Path</th>
+              <th>Description &amp; Operational Usage</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>token</code></td>
+              <td><code>"YOUR_DISCORD_BOT_TOKEN_HERE"</code></td>
+              <td><code>bot.token</code></td>
+              <td>Discord application bot token used for gateway connection and API authentication.</td>
+            </tr>
+            <tr>
+              <td><code>command_prefix</code></td>
+              <td><code>"/shanty"</code></td>
+              <td><code>bot.command_prefix</code></td>
+              <td>Slash command prefix for disnake routing and legacy command matching.</td>
+            </tr>
+            <tr>
+              <td><code>idle_disconnect_seconds</code></td>
+              <td><code>180</code></td>
+              <td><code>bot.idle_disconnect_seconds</code></td>
+              <td>Inactivity timeout in seconds before automatically leaving empty voice channels.</td>
+            </tr>
+            <tr>
+              <td><code>allowed_playlist_ids</code></td>
+              <td><code>[]</code></td>
+              <td><code>bot.allowed_playlist_ids</code></td>
+              <td>Allowed list of YouTube playlist IDs permitted for queue batch imports.</td>
+            </tr>
+            <tr>
+              <td><code>media_directory</code></td>
+              <td><code>"./media/shanties"</code></td>
+              <td><code>paths.media_directory</code></td>
+              <td>Local filesystem directory housing primary sea shanty audio tracks (.mp3, .flac, .opus).</td>
+            </tr>
+            <tr>
+              <td><code>ambient_directory</code></td>
+              <td><code>"./media/ambient"</code></td>
+              <td><code>paths.ambient_directory</code></td>
+              <td>Local filesystem path storing ambient background loops and atmospheric soundscapes.</td>
+            </tr>
+            <tr>
+              <td><code>youtube_cache_directory</code></td>
+              <td><code>"./media/cache"</code></td>
+              <td><code>paths.youtube_cache_directory</code></td>
+              <td>Storage path for yt-dlp stream downloads and cached FFmpeg JIT Opus chunks.</td>
+            </tr>
+            <tr>
+              <td><code>web.host</code></td>
+              <td><code>"127.0.0.1"</code></td>
+              <td><code>web.host</code></td>
+              <td>Bind IP address for the embedded FastAPI Web Status Board service.</td>
+            </tr>
+            <tr>
+              <td><code>web.port</code></td>
+              <td><code>8000</code></td>
+              <td><code>web.port</code></td>
+              <td>HTTP port serving the web status interface and health check API endpoints.</td>
+            </tr>
+            <tr>
+              <td><code>web.public_url</code></td>
+              <td><code>"https://your-domain.com"</code></td>
+              <td><code>web.public_url</code></td>
+              <td>Publicly accessible base URL used for telemetry callbacks and dashboard sharing.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section 5: System Features & Architecture -->
+    <section>
+      <h2>System Features &amp; Architecture</h2>
+      <p class="muted">
+        Core architectural principles behind shantyBot's high-performance audio engine and zero-downtime resilience.
+      </p>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3 class="card-title">JIT Opus Engine</h3>
+          <p class="card-body">
+            Dynamic FFmpeg audio transcoding with intelligent chunk caching. Converts multi-format audio streams on-the-fly to 48kHz 16-bit stereo Opus frames for zero-latency Discord playback.
+          </p>
+          <div class="card-footer-row">
+            <span class="badge badge-success">Zero-Latency Audio</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">Web Status Board</h3>
+          <p class="card-body">
+            Lightweight embedded status dashboard running on port 8000. Exposes real-time active voice session metrics, playback status, track queues, and health check telemetry via FastAPI.
+          </p>
+          <div class="card-footer-row">
+            <span class="badge badge-primary">Port 8000 Telemetry</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">Channel State Isolation</h3>
+          <p class="card-body">
+            Strict isolation between voice channels. Maintains independent playback queues, audio transformers, volume controls, and session state engines across multiple guilds simultaneously.
+          </p>
+          <div class="card-footer-row">
+            <span class="badge badge-info">Multi-Guild Support</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">Empty Directory Safety</h3>
+          <p class="card-body">
+            Resilient daemon initialization with non-blocking unmounted media warnings. Gracefully handles missing sound libraries without crashing the Discord bot or Web Status Board daemons.
+          </p>
+          <div class="card-footer-row">
+            <span class="badge badge-warning">Fault Tolerant</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Section 6: Site Footer -->
+  <footer>
+    <p>
+      Released under the Apache 2.0 License.<br />
+      Documentation landing page hosted on GitHub Pages for <code>shantyBot</code>.
+    </p>
+  </footer>
+
+  <!-- Dark Mode Toggle Button -->
+  <button id="darkModeToggle" aria-label="Toggle dark mode">🌙 Dark Mode</button>
+
+  <!-- Interactive Scripts -->
+  <script>
+    // Theme Toggle Handler
+    const toggleBtn = document.getElementById('darkModeToggle');
+    const storedTheme = localStorage.getItem('theme');
+    if (storedTheme === 'dark' || (!storedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.body.classList.add('dark-mode');
+      toggleBtn.textContent = '☀️ Light Mode';
+    }
+    toggleBtn.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      const isDark = document.body.classList.contains('dark-mode');
+      toggleBtn.textContent = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+
+    // Copy to Clipboard Utility for Code Snippets
+    function copyCode(btn) {
+      const pre = btn.nextElementSibling;
+      const codeText = pre.innerText;
+      navigator.clipboard.writeText(codeText).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'Copy';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>
