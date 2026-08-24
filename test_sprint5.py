@@ -12,6 +12,17 @@ from core.bot import ShantyBot, setup_bot_commands
 from core.audio_source import MixedAudioSource, SoloAmbientAudioSource
 from web.server import create_web_app
 
+def _get_loop():
+    try:
+        return asyncio.get_running_loop()
+    except RuntimeError:
+        try:
+            return asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            return loop
+
 def test_command_deprecation():
     dummy_bot = ShantyBot(player=None, library=None, youtube=None, raid_path="./media/raid_sounds")
     setup_bot_commands(dummy_bot)
@@ -46,7 +57,7 @@ def test_audio_source_cleanup_pipes():
     print("✅ Task E.1 FFmpeg Pipe Closure & Cleanup Test Passed!")
 
 def test_eof_state_disentanglement():
-    dummy_bot = type("DummyBot", (), {"loop": asyncio.get_event_loop_policy().get_event_loop(), "raid_path": "./media/raid_sounds"})()
+    dummy_bot = type("DummyBot", (), {"loop": _get_loop(), "raid_path": "./media/raid_sounds"})()
     pipeline = ChannelAudioPipeline(channel_id=999, bot=dummy_bot)
 
     amb_track = Track(title="Sea Ambience", artist="Ambient", path=Path("/fake/sea.mp3"))
@@ -60,8 +71,10 @@ def test_eof_state_disentanglement():
     print("✅ EOF State Disentanglement Test Passed (current_track = None on empty queue)!")
 
 def test_solo_ambient_kick_mechanism():
-    dummy_bot = type("DummyBot", (), {"loop": asyncio.get_event_loop_policy().get_event_loop(), "raid_path": "./media/raid_sounds"})()
+    dummy_bot = type("DummyBot", (), {"loop": _get_loop(), "raid_path": "./media/raid_sounds"})()
     pipeline = ChannelAudioPipeline(channel_id=444, bot=dummy_bot)
+    fake_vc = type("FakeVC", (), {"is_connected": lambda *a: True, "is_playing": lambda *a: False, "is_paused": lambda *a: False, "play": lambda *a, **kw: None, "stop": lambda *a, **kw: None, "source": None})()
+    pipeline.voice_client = fake_vc
 
     amb_track = Track(title="Ocean Waves", artist="Ambient", path=Path("/fake/ocean.mp3"))
     pipeline.active_ambient = amb_track
@@ -82,8 +95,9 @@ def test_solo_ambient_kick_mechanism():
     print("✅ Task E.3 & E.4 Solo-Ambient Kick Mechanism Test Passed!")
 
 def test_mid_track_seek_tracking():
-    dummy_bot = type("DummyBot", (), {"loop": asyncio.get_event_loop_policy().get_event_loop(), "raid_path": "./media/raid_sounds"})()
+    dummy_bot = type("DummyBot", (), {"loop": _get_loop(), "raid_path": "./media/raid_sounds"})()
     pipeline = ChannelAudioPipeline(channel_id=888, bot=dummy_bot)
+    pipeline.voice_client = type("FakeVC", (), {"is_connected": lambda *a: True, "is_playing": lambda *a: False, "is_paused": lambda *a: False, "play": lambda *a, **kw: None, "stop": lambda *a, **kw: None, "source": None})()
 
     track = Track(title="Wellerman", artist="Nathan Evans", path=Path("/fake/wellerman.mp3"), duration_seconds=135.0)
     item = PlayableItem(track, mode="standard", seek_seconds=0.0)
@@ -99,8 +113,9 @@ def test_mid_track_seek_tracking():
     print("✅ Mid-Track Seek & Progress Counter Test Passed!")
 
 def test_pause_drift_protection():
-    dummy_bot = type("DummyBot", (), {"loop": asyncio.get_event_loop_policy().get_event_loop(), "raid_path": "./media/raid_sounds"})()
+    dummy_bot = type("DummyBot", (), {"loop": _get_loop(), "raid_path": "./media/raid_sounds"})()
     pipeline = ChannelAudioPipeline(channel_id=777, bot=dummy_bot)
+    pipeline.voice_client = type("FakeVC", (), {"is_connected": lambda *a: True, "is_playing": lambda *a: False, "is_paused": lambda *a: False, "play": lambda *a, **kw: None, "stop": lambda *a, **kw: None, "source": None})()
 
     track = Track(title="Leave Her Johnny", artist="Sean Dagher", path=Path("/fake/johnny.mp3"), duration_seconds=180.0)
     item = PlayableItem(track, mode="standard")
@@ -118,7 +133,7 @@ def test_pause_drift_protection():
     print("✅ Pause Drift Protection Test Passed!")
 
 def test_ambient_pause_decoupling_and_callback_suppression():
-    dummy_bot = type("DummyBot", (), {"loop": asyncio.get_event_loop_policy().get_event_loop(), "raid_path": "./media/raid_sounds"})()
+    dummy_bot = type("DummyBot", (), {"loop": _get_loop(), "raid_path": "./media/raid_sounds"})()
     pipeline = ChannelAudioPipeline(channel_id=666, bot=dummy_bot)
 
     # Test callback suppression flag logic
@@ -132,8 +147,9 @@ def test_ambient_pause_decoupling_and_callback_suppression():
     print("✅ Task 6.5 & 6.6 Callback Suppression & Stream Swap Test Passed!")
 
 def test_mid_track_ambient_toggle_auto_start():
-    dummy_bot = type("DummyBot", (), {"loop": asyncio.get_event_loop_policy().get_event_loop(), "raid_path": "./media/raid_sounds"})()
+    dummy_bot = type("DummyBot", (), {"loop": _get_loop(), "raid_path": "./media/raid_sounds"})()
     pipeline = ChannelAudioPipeline(channel_id=555, bot=dummy_bot)
+    pipeline.voice_client = type("FakeVC", (), {"is_connected": lambda *a: True, "is_playing": lambda *a: False, "is_paused": lambda *a: False, "play": lambda *a, **kw: None, "stop": lambda *a, **kw: None, "source": None})()
 
     track = Track(title="Bulls in the Heather", artist="Sea Shanty Crew", path=Path("/fake/bulls.mp3"), duration_seconds=200.0)
     pipeline.queue.append(PlayableItem(track))
@@ -163,7 +179,7 @@ def test_shutdown_cleanup_and_api_filter():
     print("✅ Task B3.2 & B3.3 Graceful Shutdown & API Filter Test Passed!")
 
 def test_channel_pipeline_isolation():
-    dummy_bot = type("DummyBot", (), {"loop": asyncio.get_event_loop_policy().get_event_loop(), "raid_path": "./media/raid_sounds"})()
+    dummy_bot = type("DummyBot", (), {"loop": _get_loop(), "raid_path": "./media/raid_sounds"})()
     player = ShantyPlayer(dummy_bot, max_channels=2)
 
     p1 = player.get_or_create_pipeline(channel_id=101)
@@ -273,7 +289,7 @@ def test_shuffle_toggle_and_slash_command():
     print("✅ Task F.2 Slash Command & Pipeline Instance State Toggle Passed!")
 
 def test_shuffle_auto_pick_and_exclusion():
-    dummy_bot = type("DummyBot", (), {"loop": asyncio.get_event_loop_policy().get_event_loop(), "raid_path": "./media/raid_sounds"})()
+    dummy_bot = type("DummyBot", (), {"loop": _get_loop(), "raid_path": "./media/raid_sounds"})()
     
     t1 = Track(title="Track One", artist="Artist", path=Path("/fake/track1.mp3"))
     t2 = Track(title="Track Two", artist="Artist", path=Path("/fake/track2.mp3"))
@@ -281,6 +297,7 @@ def test_shuffle_auto_pick_and_exclusion():
 
     fake_lib = type("FakeLib", (), {"cache": [t1, t2, t3]})()
     pipeline = ChannelAudioPipeline(channel_id=102, bot=dummy_bot, library=fake_lib)
+    pipeline.voice_client = type("FakeVC", (), {"is_connected": lambda *a: True, "is_playing": lambda *a: False, "is_paused": lambda *a: False, "play": lambda *a, **kw: None, "stop": lambda *a, **kw: None, "source": None})()
 
     pipeline.shuffle_mode = True
     pipeline.last_played_path = t1.path
@@ -294,11 +311,12 @@ def test_shuffle_auto_pick_and_exclusion():
     print("✅ Task F.1 Shuffle Auto-Pick & Exclusion Filter Passed!")
 
 def test_shuffle_empty_and_single_track_libraries():
-    dummy_bot = type("DummyBot", (), {"loop": asyncio.get_event_loop_policy().get_event_loop(), "raid_path": "./media/raid_sounds"})()
+    dummy_bot = type("DummyBot", (), {"loop": _get_loop(), "raid_path": "./media/raid_sounds"})()
     
     # 0-track library test
     empty_lib = type("FakeLib", (), {"cache": []})()
     pipeline_empty = ChannelAudioPipeline(channel_id=103, bot=dummy_bot, library=empty_lib)
+    pipeline_empty.voice_client = type("FakeVC", (), {"is_connected": lambda *a: True, "is_playing": lambda *a: False, "is_paused": lambda *a: False, "play": lambda *a, **kw: None, "stop": lambda *a, **kw: None, "source": None})()
     pipeline_empty.shuffle_mode = True
 
     pipeline_empty.play_next()
@@ -309,6 +327,7 @@ def test_shuffle_empty_and_single_track_libraries():
     single_track = Track(title="Solo Track", artist="Artist", path=Path("/fake/solo.mp3"))
     single_lib = type("FakeLib", (), {"cache": [single_track]})()
     pipeline_single = ChannelAudioPipeline(channel_id=104, bot=dummy_bot, library=single_lib)
+    pipeline_single.voice_client = type("FakeVC", (), {"is_connected": lambda *a: True, "is_playing": lambda *a: False, "is_paused": lambda *a: False, "play": lambda *a, **kw: None, "stop": lambda *a, **kw: None, "source": None})()
     pipeline_single.shuffle_mode = True
     pipeline_single.last_played_path = single_track.path
 
@@ -322,7 +341,7 @@ def test_web_telemetry_shuffle():
     p = player.get_or_create_pipeline(channel_id=202)
     p.shuffle_mode = True
 
-    fake_vc = type("FakeVC", (), {"is_connected": lambda: True, "is_playing": lambda: False, "is_paused": lambda: False, "channel": type("Ch", (), {"name": "Test VC", "id": 202})()})()
+    fake_vc = type("FakeVC", (), {"is_connected": lambda *a: True, "is_playing": lambda *a: False, "is_paused": lambda *a: False, "channel": type("Ch", (), {"name": "Test VC", "id": 202})()})()
     p.voice_client = fake_vc
 
     app = create_web_app(player, None)
@@ -336,6 +355,9 @@ def test_web_telemetry_shuffle():
     print("✅ Task F.3 Web API Telemetry & Shuffle Status Badge Test Passed!")
 
 if __name__ == "__main__":
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    asyncio.get_event_loop_policy().set_event_loop(loop)
     test_command_deprecation()
     test_mixed_and_solo_audio_sources()
     test_audio_source_cleanup_pipes()

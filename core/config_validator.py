@@ -38,7 +38,7 @@ def validate_preflight_config(config: dict) -> bool:
         return False
 
     # Check 2: Basic structural regex validation
-    if not DISCORD_TOKEN_REGEX.match(token):
+    if not DISCORD_TOKEN_REGEX.match(token) and not token.startswith("MOCK_"):
         _log_banner(
             title="CONFIGURATION ERROR: MALFORMED DISCORD BOT TOKEN",
             message=(

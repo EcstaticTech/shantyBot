@@ -37,13 +37,15 @@ class LocalLibrary:
                         title, artist, duration = self._extract_metadata(resolved)
                         new_ambient_cache.append(Track(title=title, artist="Ambient", path=resolved, duration_seconds=duration))
         self.ambient_cache = new_ambient_cache
+        if len(self.ambient_cache) == 0:
+            logger.warning(f"[WARN] No tracks found in {self.ambient_path}. Mount audio files to enable playback.")
         return self.ambient_cache
 
     def refresh_index(self) -> int:
         """Indexes local audio and ambient files into memory with Mutagen metadata parsing."""
         new_cache = []
         if not self.base_path.exists():
-            logger.warning(f"Media directory {self.base_path} does not exist.")
+            logger.warning(f"[WARN] No tracks found in {self.base_path}. Mount audio files to enable playback.")
             self.cache = []
         else:
             for file_path in self.base_path.glob("**/*"):
@@ -53,6 +55,8 @@ class LocalLibrary:
                         title, artist, duration = self._extract_metadata(resolved)
                         new_cache.append(Track(title=title, artist=artist, path=resolved, duration_seconds=duration))
             self.cache = new_cache
+            if len(self.cache) == 0:
+                logger.warning(f"[WARN] No tracks found in {self.base_path}. Mount audio files to enable playback.")
 
         self.scan_ambient_directory()
 

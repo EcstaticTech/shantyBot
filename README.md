@@ -1,8 +1,8 @@
-# shantyBot `v0.0.2`
+# shantyBot `v0.0.3`
 
 A secure, zero-latency local-first music bot, multi-channel audio engine, and live Web Status Board running inside a single Python `asyncio` event loop.
 
-![Version](https://img.shields.io/badge/version-0.0.2-blue)
+![Version](https://img.shields.io/badge/version-0.0.3-blue)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![Framework](https://img.shields.io/badge/disnake-2.9%2B-purple)
 ![FastAPI](https://img.shields.io/badge/fastapi-0.111%2B-green)
@@ -51,13 +51,19 @@ The ambient audio engine dynamically indexes all valid audio files in `./media/a
 
 ```
 shantyBot/
+├── .dockerignore
 ├── .gitignore
+├── .github/
+│   └── workflows/
+│       └── docker-publish.yml
 ├── README.md
+├── pyproject.toml
 ├── requirements.txt
 ├── config.example.yaml
 ├── main.py
 ├── Dockerfile
 ├── docker-compose.yml
+├── test_sanity.py
 ├── test_sprint5.py
 ├── core/
 │   ├── __init__.py
@@ -103,7 +109,7 @@ shantyBot/
    bot:
      token: "YOUR_DISCORD_BOT_TOKEN_HERE"
    web:
-     public_url: "http://localhost:8000"
+     public_url: "https://your-domain.com"
    max_cache_gb: 2.0
    ```
 3. **Install Dependencies**:
@@ -123,10 +129,34 @@ shantyBot/
 
 ## 🐳 Container Deployment (Docker)
 
-To run shantyBot in a container with pre-packaged FFmpeg, read-only host mounts, and python 3.11-slim:
+To deploy shantyBot using the multi-architecture container published on GitHub Container Registry:
+
+1. Create a `docker-compose.yml` file on your server:
+
+```yaml
+version: '3.8'
+
+services:
+  shantybot:
+    image: ghcr.io/ecstatictech/shantybot:latest
+    container_name: shantybot
+    restart: unless-stopped
+    volumes:
+      - ./config.yaml:/app/config.yaml
+      - ./media/shanties:/app/media/shanties
+      - ./media/ambient:/app/media/ambient
+      - ./media/cache:/app/media/cache
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+```
+
+2. Copy `config.example.yaml` to `config.yaml` and configure your bot token.
+3. Start the container:
 
 ```bash
-docker-compose up -d --build
+docker-compose up -d
 ```
 
 ---
@@ -147,5 +177,5 @@ nssm start shantyBot
 
 ## 📄 Versioning & License
 
-- **Version**: `0.0.2`
+- **Version**: `0.0.3`
 - **License**: Apache 2.0

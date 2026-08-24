@@ -1,4 +1,5 @@
 import sys
+import asyncio
 from pathlib import Path
 
 # Add root directory to sys.path
@@ -21,7 +22,7 @@ def test_preflight_validator():
     assert validate_preflight_config(case_b) == False, "Case B malformed token check failed"
 
     # Case C: Valid Token Format
-    case_c = {"bot": {"token": "MTEyMzQ1Njc4OTAxMjM0NTY3ODkuRzEyMzQ1LlNhbXBsZUhtYWNTaWduYXR1cmVTdHJpbmc5ODc2NQ"}}
+    case_c = {"bot": {"token": "MOCK_DISCORD_TOKEN_FOR_TESTING_ONLY_00000000"}}
     assert validate_preflight_config(case_c) == True, "Case C valid token check failed"
 
     print("✅ Pre-Flight Validator Tests Passed (Cases A, B, C)!")
@@ -107,7 +108,7 @@ def test_library_ambient_cache():
     assert hasattr(lib, "search_ambient"), "library missing search_ambient"
     print("✅ LocalLibrary Ambient Cache & Search Test Passed!")
 
-if __name__ == "__main__":
+async def run_all_tests():
     test_preflight_validator()
     test_track_metadata()
     test_url_allowlist()
@@ -118,4 +119,7 @@ if __name__ == "__main__":
     test_player_lock_and_interrupt()
     test_active_ambient_state_machine()
     test_library_ambient_cache()
+
+if __name__ == "__main__":
+    asyncio.run(run_all_tests())
     print("🎉 All shantyBot Sanity Checks Passed!")

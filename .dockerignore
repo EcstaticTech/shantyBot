@@ -1,0 +1,12 @@
+.git
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.env
+config.yaml
+media/
+cache/
+audio_cache/
+tests/
+.venv/

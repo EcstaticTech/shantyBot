@@ -2,14 +2,14 @@ version: '3.8'
 
 services:
   shantybot:
-    build: .
+    image: ghcr.io/ecstatictech/shantybot:latest
     container_name: shantybot
     restart: unless-stopped
     volumes:
-      - ./config.yaml:/app/config.yaml:ro
-      - ./media/shanties:/app/media/shanties:ro
-      - ./media/ambient:/app/media/ambient:ro
-      - ./media/cache:/app/media/cache:rw
+      - ./config.yaml:/app/config.yaml
+      - ./media/shanties:/app/media/shanties
+      - ./media/ambient:/app/media/ambient
+      - ./media/cache:/app/media/cache
     ports:
       - "127.0.0.1:8000:8000"
     environment:
